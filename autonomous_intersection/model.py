@@ -7,6 +7,7 @@ from mesa.time import SimultaneousActivation
 
 from autonomous_intersection.agents.car import Car
 from autonomous_intersection.intersection_builder import IntersectionBuilder
+from autonomous_intersection.rect import Rect
 
 DIR_RIGHT = (1, 0)
 DIR_LEFT = (-1, 0)
@@ -111,3 +112,16 @@ class Intersection(Model):
         self.schedule.step()
         self.add_new_agents()
         self.remove_cars()
+        self.control_cars()
+
+    def control_cars(self):
+        rects = {car.unique_id: car.rect for car in self.cars.values()}
+        new_rects = []
+        for car in self.cars.values():
+            rect = car.new_rect
+            if any(rect in rects[other] for other in rects if car.unique_id != other) or any(rect in other for other in new_rects):
+                car.can_move = False
+            else:
+                car.can_move = True
+                new_rects.append(rect)
+

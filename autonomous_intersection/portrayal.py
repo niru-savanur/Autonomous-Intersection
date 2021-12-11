@@ -1,21 +1,19 @@
+from typing import Union
+
 from autonomous_intersection.agents.car import Car
+from autonomous_intersection.agents.visualcell import VisualCell
 
 
-def portrayCell(cell):
+def portrayCell(cell: Union[Car, VisualCell]):
     assert cell is not None
-    return get_json(cell.x, cell.y, cell.width, cell.height, color=cell.color, layer=cell.layer, shape=cell.shape, rotation=cell.rotation)
-
-
-def get_json(x: int, y: int, w: int = 1, h: int = 1, color: str = "white", filled: bool = True, shape: str = "rect",
-             layer: int = 0, rotation = 0):
     return {
-        "Shape": shape,
-        "w": w,
-        "h": h,
-        "Filled": filled,
-        "Layer": layer,
-        "x": x,
-        "y": y,
-        "Color": color,
-        "rotation": rotation
+        "Shape": cell.shape,
+        "w": cell.width,
+        "h": cell.height,
+        "Filled": True,
+        "Layer": cell.layer,
+        "x": cell.x,
+        "y": cell.y,
+        "Color": cell.color,
+        "rotation": cell.rotation
     }
