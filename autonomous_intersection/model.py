@@ -34,6 +34,11 @@ class Intersection(Model):
         self.spawn_car((0, -1), 50, 30)
         self.running = True
         self.spawn_rate = spawn_rate / 100
+        self.intersection = self.get_intersection_rect()
+
+    def get_intersection_rect(self) -> Rect:
+        return Rect(self.width / 2 - self.road_width / 2, self.height / 2 - self.road_width / 2, self.road_width,
+                    self.road_width, 0)
 
     def get_agent_id(self):
         self.agent_id += 1
@@ -93,13 +98,15 @@ class Intersection(Model):
 
     def is_entry_occupied(self, direction: Tuple[int, int]) -> bool:
         if direction == DIR_UP:
-            return any(car for car in self.cars.values() if car.entry == direction and car.y > self.height - car.width * 3)
+            return any(
+                car for car in self.cars.values() if car.entry == direction and car.y > self.height - car.width * 3)
         elif direction == DIR_DOWN:
             return any(car for car in self.cars.values() if car.entry == direction and car.y < car.height * 3)
         elif direction == DIR_RIGHT:
             return any(car for car in self.cars.values() if car.entry == direction and car.x < car.width * 3)
         elif direction == DIR_LEFT:
-            return any(car for car in self.cars.values() if car.entry == direction and car.x > self.width - car.width * 3)
+            return any(
+                car for car in self.cars.values() if car.entry == direction and car.x > self.width - car.width * 3)
 
         return True
 
@@ -116,12 +123,20 @@ class Intersection(Model):
 
     def control_cars(self):
         rects = {car.unique_id: car.rect for car in self.cars.values()}
+        intersection = next((rect for rect in rects if rects[rect] in self.intersection), None)
+
         new_rects = []
         for car in self.cars.values():
             rect = car.new_rect
-            if any(rect in rects[other] for other in rects if car.unique_id != other) or any(rect in other for other in new_rects):
+            if any(rect in rects[other] for other in rects if car.unique_id != other) or any(
+                    rect in other for other in new_rects):
                 car.can_move = False
             else:
+                if rect in self.intersection and car.unique_id != intersection:
+                    if intersection is None:
+                        intersection = car.unique_id
+                    else:
+                        car.can_move = False
+                        continue
                 car.can_move = True
                 new_rects.append(rect)
-
