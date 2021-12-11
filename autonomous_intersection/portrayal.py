@@ -1,18 +1,21 @@
+from autonomous_intersection.agents.car import Car
+
+
 def portrayCell(cell):
-    """
-    This function is registered with the visualization server to be called
-    each tick to indicate how to draw the cell in its current state.
-    :param cell:  the cell in the simulation
-    :return: the portrayal dictionary.
-    """
     assert cell is not None
+    return get_json(cell.x, cell.y, cell.width, cell.height, color=cell.color, layer=cell.layer, shape=cell.shape, rotation=cell.rotation)
+
+
+def get_json(x: int, y: int, w: int = 1, h: int = 1, color: str = "white", filled: bool = True, shape: str = "rect",
+             layer: int = 0, rotation = 0):
     return {
-        "Shape": "rect",
-        "w": 1,
-        "h": 1,
-        "Filled": "true",
-        "Layer": 0,
-        "x": cell.x,
-        "y": cell.y,
-        "Color": "black" if cell.isAlive else "white",
+        "Shape": shape,
+        "w": w,
+        "h": h,
+        "Filled": filled,
+        "Layer": layer,
+        "x": x,
+        "y": y,
+        "Color": color,
+        "rotation": rotation
     }
