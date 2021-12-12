@@ -8,24 +8,6 @@ from .model import Intersection
 canvas_element = ContinuousCanvas(portrayCell, 1000, 1000)
 
 model_params = {
-    "height": UserSettableParameter(
-        "slider",
-        "Height",
-        1000,
-        100,
-        1000,
-        1,
-        description="Simulation height",
-    ),
-    "width": UserSettableParameter(
-        "slider",
-        "Width",
-        1000,
-        100,
-        1000,
-        1,
-        description="Simulation width",
-    ),
     "spawn_rate": UserSettableParameter(
         "slider",
         "Spawn rate",

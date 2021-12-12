@@ -19,14 +19,9 @@ class Rect:
         return self.left + self.width
 
     def __contains__(self, r2: "Rect") -> bool:
-        r1 = self.apply_rotation()
-        r2 = r2.apply_rotation()
+        r1 = self._bounding_box()
+        r2 = r2._bounding_box()
         return not (r2.left > r1.right or r2.right < r1.left or r2.top > r1.bottom or r2.bottom < r1.top)
-
-    def apply_rotation(self) -> "Rect":
-        if self.rotation == math.pi / 2:
-            return Rect(self.center[0] - self.height / 2, self.center[1] - self.width / 2, self.height, self.width, 0)
-        return Rect(self.left, self.top, self.width, self.height, self.rotation)
 
     def __eq__(self, other):
         return (self.width == other.width and self.height == other.height
@@ -37,8 +32,26 @@ class Rect:
         return self.left + self.width / 2, self.top + self.height / 2
 
     def __str__(self):
-        rect = self.apply_rotation()
-        return f"({rect.left}, {rect.top}, {rect.right}, {rect.bottom})"
+        return str(self._get_points())
 
     def __repr__(self):
         return self.__str__()
+
+    def _get_points(self):
+        points = [(self.left, self.top), (self.right, self.top), (self.right, self.bottom), (self.left, self.bottom)]
+        return list(map(lambda x: self._rotate(self.center, x, self.rotation), points))
+
+    def _bounding_box(self):
+        x_coordinates, y_coordinates = zip(*self._get_points())
+        mx = min(x_coordinates)
+        my = min(y_coordinates)
+        return Rect(mx, my, max(x_coordinates) - mx, max(y_coordinates) - my, 0)
+
+    @staticmethod
+    def _rotate(origin, point, angle):
+        ox, oy = origin
+        px, py = point
+
+        qx = ox + math.cos(angle) * (px - ox) - math.sin(angle) * (py - oy)
+        qy = oy + math.sin(angle) * (px - ox) + math.cos(angle) * (py - oy)
+        return qx, qy

@@ -16,7 +16,7 @@ DIR_UP = (0, -1)
 
 
 class Intersection(Model):
-    def __init__(self, height=500, width=500, spawn_rate=10, *args: Any, **kwargs: Any):
+    def __init__(self, height=1000, width=1000, spawn_rate=10, *args: Any, **kwargs: Any):
         super().__init__(*args, **kwargs)
         self.schedule = SimultaneousActivation(self)
         self.space = ContinuousSpace(height, width, False)
