@@ -1,5 +1,4 @@
-import math
-from typing import Any, Tuple
+from typing import Any
 
 from mesa import Model
 from mesa.space import ContinuousSpace
@@ -8,11 +7,6 @@ from mesa.time import SimultaneousActivation
 from autonomous_intersection.agents.car import Car
 from autonomous_intersection.intersection_builder import IntersectionBuilder
 from autonomous_intersection.rect import Rect
-
-DIR_RIGHT = (1, 0)
-DIR_LEFT = (-1, 0)
-DIR_DOWN = (0, 1)
-DIR_UP = (0, -1)
 
 
 class Intersection(Model):
@@ -26,12 +20,8 @@ class Intersection(Model):
         self.cars = {}
 
         self.build_background()
-        self.agent_id = 1
+        self.agent_id = 0
 
-        self.spawn_car((1, 0), 50, 30)
-        self.spawn_car((-1, 0), 50, 30)
-        self.spawn_car((0, 1), 50, 30)
-        self.spawn_car((0, -1), 50, 30)
         self.running = True
         self.spawn_rate = spawn_rate / 100
         self.intersection = self.get_intersection_rect()
@@ -49,28 +39,23 @@ class Intersection(Model):
             self.space.place_agent(cell, (cell.x, cell.y))
             self.schedule.add(cell)
 
-    def spawn_car(self, direction, width, height):
-        if direction == DIR_UP:
+    def spawn_car(self, entry, width, height):
+        if entry == Car.UP:
             cell = Car(self.get_agent_id(),
                        (self.width / 2 + self.road_width / 4 - height / 2, self.height - width),
-                       (width, height), self, math.pi / 2,
-                       direction=direction)
-        elif direction == DIR_DOWN:
+                       (width, height), self, Car.ANGLE_UP)
+        elif entry == Car.DOWN:
             cell = Car(self.get_agent_id(),
                        (self.width / 2 - self.road_width / 4 - height / 2, 0),
-                       (width, height), self, math.pi / 2,
-                       direction=direction)
-        elif direction == DIR_LEFT:
+                       (width, height), self, Car.ANGLE_DOWN)
+        elif entry == Car.LEFT:
             cell = Car(self.get_agent_id(),
                        (self.width - width, self.height / 2 - self.road_width / 4 - height / 2),
-                       (width, height),
-                       self,
-                       0, direction=direction)
-        elif direction == DIR_RIGHT:
+                       (width, height), self, Car.ANGLE_LEFT)
+        elif entry == Car.RIGHT:
             cell = Car(self.get_agent_id(),
                        (0, self.height / 2 + self.road_width / 4 - height / 2),
-                       (width, height),
-                       self, 0, direction=direction)
+                       (width, height), self, Car.ANGLE_RIGHT)
 
         self.space.place_agent(cell, (cell.x, cell.y))
         self.schedule.add(cell)
@@ -96,24 +81,21 @@ class Intersection(Model):
         for car in to_delete:
             del self.cars[car.unique_id]
 
-    def is_entry_occupied(self, direction: Tuple[int, int]) -> bool:
-        if direction == DIR_UP:
-            return any(
-                car for car in self.cars.values() if car.entry == direction and car.y > self.height - car.width * 3)
-        elif direction == DIR_DOWN:
-            return any(car for car in self.cars.values() if car.entry == direction and car.y < car.height * 3)
-        elif direction == DIR_RIGHT:
-            return any(car for car in self.cars.values() if car.entry == direction and car.x < car.width * 3)
-        elif direction == DIR_LEFT:
-            return any(
-                car for car in self.cars.values() if car.entry == direction and car.x > self.width - car.width * 3)
-
+    def is_entry_occupied(self, entry: float) -> bool:
+        if entry == Car.UP:
+            return any(car for car in self.cars.values() if car.entry == entry and car.y > self.height - car.width * 3)
+        elif entry == Car.DOWN:
+            return any(car for car in self.cars.values() if car.entry == entry and car.y < car.height * 3)
+        elif entry == Car.RIGHT:
+            return any(car for car in self.cars.values() if car.entry == entry and car.x < car.width * 3)
+        elif entry == Car.LEFT:
+            return any(car for car in self.cars.values() if car.entry == entry and car.x > self.width - car.width * 3)
         return True
 
     def add_new_agents(self):
-        for direction in (DIR_UP, DIR_DOWN, DIR_LEFT, DIR_RIGHT):
-            if not self.is_entry_occupied(direction) and self.random.random() < self.spawn_rate:
-                self.spawn_car(direction, 50, 30)
+        for entry in (Car.UP, Car.DOWN, Car.RIGHT, Car.LEFT):
+            if not self.is_entry_occupied(entry) and self.random.random() < self.spawn_rate:
+                self.spawn_car(entry, 50, 30)
 
     def step(self):
         self.schedule.step()

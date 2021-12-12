@@ -1,4 +1,6 @@
+import math
 import random
+from math import cos, sin
 
 from mesa import Agent
 
@@ -6,7 +8,16 @@ from autonomous_intersection.rect import Rect
 
 
 class Car(Agent):
-    def __init__(self, _id, pos, size, model, rotation=0, direction=(1, 0), color=None):
+    ANGLE_RIGHT = 0
+    ANGLE_LEFT = math.pi
+    ANGLE_UP = -math.pi / 2
+    ANGLE_DOWN = math.pi / 2
+    UP = (0, -1)
+    DOWN = (0, 1)
+    LEFT = (-1, 0)
+    RIGHT = (1, 0)
+
+    def __init__(self, _id, pos, size, model, rotation=0, color=None):
         super().__init__(_id, model)
         self.x, self.y = pos
         self.width, self.height = size
@@ -15,12 +26,13 @@ class Car(Agent):
         self.color = color if color is not None else self.random_color()
         self.rotation = rotation
         self.velocity = 10
-        self.dir = direction
+        self.direction = (1, 0)
+        self.rotate(self.rotation)
         self._new_x = self.x
         self._new_y = self.y
         self.layer = 1
         self.shape = "rect"
-        self.entry = direction
+        self.entry = self.direction
         self.can_move = True
 
     @property
@@ -29,12 +41,11 @@ class Car(Agent):
 
     @property
     def new_position(self):
-        return self.x + self.dir[0] * self.velocity, self.y + self.dir[1] * self.velocity
+        return self.x + self.direction[0] * self.velocity, self.y + self.direction[1] * self.velocity
 
     def step(self):
         if self.can_move:
             self._new_x, self._new_y = self.new_position
-
 
     def advance(self):
         self.x = self._new_x
@@ -48,8 +59,12 @@ class Car(Agent):
     def rect(self) -> Rect:
         return Rect(self.x, self.y, self.width, self.height, self.rotation)
 
-
     @property
     def new_rect(self) -> Rect:
         next_ = self.new_position
         return Rect(next_[0], next_[1], self.width, self.height, self.rotation)
+
+    def rotate(self, angle):
+        new_x = self.direction[0] * cos(angle) - self.direction[1] * sin(angle)
+        new_y = self.direction[0] * sin(angle) + self.direction[1] * cos(angle)
+        self.direction = (round(new_x), round(new_y))
