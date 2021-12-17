@@ -16,7 +16,16 @@ model_params = {
         100,
         1,
         description="Car spawn rate",
-    )
+    ),
+    "velocity": UserSettableParameter(
+        "slider",
+        "Car velocity",
+        10,
+        1,
+        100,
+        1,
+        description="Car velocity",
+    ),
 }
 
 server = ModularServer(

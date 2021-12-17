@@ -9,13 +9,13 @@ from autonomous_intersection.intersection_manager import IntersectionManager
 
 
 class Intersection(Model):
-    def __init__(self, height=1000, width=1000, spawn_rate=10, *args: Any, **kwargs: Any):
+    def __init__(self, height=1000, width=1000, spawn_rate=10, velocity: int = 10, *args: Any, **kwargs: Any):
         super().__init__(*args, **kwargs)
         self.schedule = SimultaneousActivation(self)
         self.space = ContinuousSpace(height, width, False)
         self.width = width
         self.height = height
-        self.manager = IntersectionManager(self.width, self.height, 100)
+        self.manager = IntersectionManager(self.width, self.height, 100, velocity)
         self.build_background()
         self.agent_id = 0
         self.running = True

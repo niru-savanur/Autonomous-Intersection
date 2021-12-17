@@ -6,10 +6,11 @@ from autonomous_intersection.rect import Rect
 
 
 class IntersectionManager:
-    def __init__(self, width: int, height: int, road_width: int):
+    def __init__(self, width: int, height: int, road_width: int, default_velocity: int):
         self.road_width: int = road_width
         self.width: int = width
         self.height: int = height
+        self.default_velocity = default_velocity
         self.cars: Dict[int, Car] = {}
         self.intersection = self._get_intersection_rect()
 
@@ -24,16 +25,16 @@ class IntersectionManager:
     def create_new_car(self, entry: Tuple[int, int], width: int, height: int, agent_id: int, model):
         if entry == Car.UP:
             car = Car(agent_id, (self.width / 2 + self.road_width / 4 - height / 2, self.height - width),
-                      (width, height), model, Car.ANGLE_UP)
+                      (width, height), model, Car.ANGLE_UP, velocity=self.default_velocity)
         elif entry == Car.DOWN:
             car = Car(agent_id, (self.width / 2 - self.road_width / 4 - height / 2, 0), (width, height), model,
-                      Car.ANGLE_DOWN)
+                      Car.ANGLE_DOWN, velocity=self.default_velocity)
         elif entry == Car.LEFT:
             car = Car(agent_id, (self.width - width, self.height / 2 - self.road_width / 4 - height / 2),
-                      (width, height), model, Car.ANGLE_LEFT)
+                      (width, height), model, Car.ANGLE_LEFT, velocity=self.default_velocity)
         elif entry == Car.RIGHT:
             car = Car(agent_id, (0, self.height / 2 + self.road_width / 4 - height / 2), (width, height), model,
-                      Car.ANGLE_RIGHT)
+                      Car.ANGLE_RIGHT, velocity=self.default_velocity)
         else:
             raise Exception()
         self.cars[agent_id] = car
