@@ -1,6 +1,6 @@
 from typing import Dict, Tuple
 
-from autonomous_intersection.agents.car import Car
+from autonomous_intersection.agents.car import Car, Steer
 from autonomous_intersection.intersection_builder import IntersectionBuilder
 from autonomous_intersection.rect import Rect
 
@@ -25,16 +25,16 @@ class IntersectionManager:
     def create_new_car(self, entry: Tuple[int, int], width: int, height: int, agent_id: int, model):
         if entry == Car.UP:
             car = Car(agent_id, (self.width / 2 + self.road_width / 4 - height / 2, self.height - width),
-                      (width, height), model, Car.ANGLE_UP, velocity=self.default_velocity)
+                      (width, height), model, Car.ANGLE_UP, Car.DOWN, velocity=self.default_velocity)
         elif entry == Car.DOWN:
             car = Car(agent_id, (self.width / 2 - self.road_width / 4 - height / 2, 0), (width, height), model,
-                      Car.ANGLE_DOWN, velocity=self.default_velocity)
+                      Car.ANGLE_DOWN, Car.DOWN, velocity=self.default_velocity)
         elif entry == Car.LEFT:
             car = Car(agent_id, (self.width - width, self.height / 2 - self.road_width / 4 - height / 2),
-                      (width, height), model, Car.ANGLE_LEFT, velocity=self.default_velocity)
+                      (width, height), model, Car.ANGLE_LEFT, Car.UP, velocity=self.default_velocity)
         elif entry == Car.RIGHT:
             car = Car(agent_id, (0, self.height / 2 + self.road_width / 4 - height / 2), (width, height), model,
-                      Car.ANGLE_RIGHT, velocity=self.default_velocity)
+                      Car.ANGLE_RIGHT, Car.UP, velocity=self.default_velocity)
         else:
             raise Exception()
         self.cars[agent_id] = car
@@ -78,15 +78,43 @@ class IntersectionManager:
         new_rects = []
         for car in self.cars.values():
             rect = car.new_rect
+            # collisions
             if any(rect in rects[other] for other in rects if car.unique_id != other) or any(
                     rect in other for other in new_rects):
                 car.can_move = False
             else:
-                if rect in self.intersection and car.unique_id != intersection:
+                should_move = self.should_car_turn(car)
+                if (should_move or rect in self.intersection) and car.unique_id != intersection:
                     if intersection is None:
                         intersection = car.unique_id
                     else:
                         car.can_move = False
                         continue
+                if should_move:
+                    car.turn(car.steer_direction,
+                             self.distance_from_line(car.entry, car.steer_direction, car.x,
+                                                     car.y))
                 car.can_move = True
                 new_rects.append(rect)
+
+    def should_car_turn(self, car) -> bool:
+        if car.steer_direction == Steer.Forward or car.steer != Steer.Forward: return False
+        current_dist = self.distance_from_line(car.entry, car.steer_direction, car.x, car.y)
+        next_dist = self.distance_from_line(car.entry, car.steer_direction, *car.new_position[:2])
+        return current_dist >= 2 * car.width >= next_dist
+
+    def distance_from_line(self, entry, steer, x, y):
+        if steer == Steer.Right:
+            if entry in (Car.ANGLE_UP, Car.ANGLE_DOWN):
+                return abs(self.intersection.center[1] - y)
+            else:
+                return abs(self.intersection.center[0] - x)
+        else:
+            if entry == Car.ANGLE_UP:
+                return abs(self.intersection.top - y)
+            elif entry == Car.ANGLE_DOWN:
+                return abs(self.intersection.bottom - y)
+            elif entry == Car.ANGLE_LEFT:
+                return abs(self.intersection.right - x)
+            else:
+                return abs(self.intersection.left - x)

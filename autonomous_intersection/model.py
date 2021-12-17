@@ -36,7 +36,7 @@ class Intersection(Model):
         self.schedule.add(cell)
 
     def add_new_agents(self):
-        for entry in (Car.UP, Car.DOWN, Car.RIGHT, Car.LEFT):
+        for entry in (Car.LEFT, ):  # (Car.UP, Car.DOWN, Car.RIGHT, Car.LEFT):
             if not self.manager.is_entry_occupied(entry) and self.random.random() < self.spawn_rate:
                 self.spawn_car(entry, 50, 30)
 
