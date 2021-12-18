@@ -22,11 +22,5 @@ class ContinuousCanvas(VisualizationElement):
     def render(self, model):
         space_state = []
         for obj in model.schedule.agents:
-            portrayal = self.portrayal_method(obj)
-            x, y = obj.x, obj.y
-            # x = (x - model.space.x_min) / (model.space.x_max - model.space.x_min)
-            # y = (y - model.space.y_min) / (model.space.y_max - model.space.y_min)
-            portrayal["x"] = x
-            portrayal["y"] = y
-            space_state.append(portrayal)
+            space_state.append(self.portrayal_method(obj))
         return space_state

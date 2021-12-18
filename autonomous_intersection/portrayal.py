@@ -10,7 +10,7 @@ def portrayCell(cell: Union[Car, VisualCell]):
         "Shape": cell.shape,
         "w": cell.width,
         "h": cell.height,
-        "Filled": True,
+        "Filled": cell.filled,
         "Layer": cell.layer,
         "x": cell.x,
         "y": cell.y,

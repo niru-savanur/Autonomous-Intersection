@@ -44,20 +44,20 @@ class IntersectionManager:
 
     def create_new_car(self, initial_direction: Direction, car_size: Tuple[int, int], agent_id: int):
         car = Car(agent_id, self.model, self.lanes[initial_direction].line,
-                  self.get_initial_car_position(car_size, initial_direction),
+                  self.get_initial_car_position(initial_direction),
                   car_size, initial_direction, initial_direction, velocity=self.default_velocity)
         self.cars[agent_id] = car
         return car
 
-    def get_initial_car_position(self, car_size: Tuple[int, int], direction: Direction) -> Tuple[int, int]:
+    def get_initial_car_position(self, direction: Direction) -> Tuple[int, int]:
         lane = self.lanes[direction]
         if direction == Direction.Up:
-            return round(lane.bounds.center[0]) - car_size[1] // 2, self.height - 1
+            return round(lane.bounds.center[0]), self.height - 1
         if direction == Direction.Down:
-            return round(lane.bounds.center[0]) - car_size[1] // 2, 0
+            return round(lane.bounds.center[0]), 0
         if direction == Direction.Left:
-            return self.width - 1, round(lane.bounds.center[1]) - car_size[1] // 2
-        return 0, round(lane.bounds.center[1]) - car_size[1] // 2
+            return self.width - 1, round(lane.bounds.center[1])
+        return 0, round(lane.bounds.center[1])
 
     def is_entry_occupied(self, initial_direction: Direction):
         if initial_direction == Direction.Up:

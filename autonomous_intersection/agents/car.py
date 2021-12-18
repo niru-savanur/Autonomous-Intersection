@@ -48,6 +48,7 @@ class Car(Agent):
         self.color = color if color is not None else self.random_color()
         self.shape = "rect"
         self.layer: int = 1
+        self.filled = True
 
         self.direction: Tuple[float, float] = (1.0, 0.0)  # x and y parts of velocity, summed to 1
         self.rotation: float = 0.0  # angle in radians
@@ -124,12 +125,12 @@ class Car(Agent):
 
     @property
     def rect(self) -> Rect:
-        return Rect(self.x, self.y, self.width, self.height, self.rotation)
+        return Rect(self.x - self.width // 2, self.y - self.height // 2, self.width, self.height, self.rotation)
 
     @property
     def new_rect(self) -> Rect:
         next_ = self.new_position
-        return Rect(next_[0], next_[1], self.width, self.height, next_[2])
+        return Rect(next_[0] - self.width // 2, next_[1] - self.height // 2, self.width, self.height, next_[2])
 
     def rotate(self, angle):
         self.direction = self._get_new_direction(angle)

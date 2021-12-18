@@ -56,14 +56,14 @@ var ContinuousVisualization = function(height, width, context) {
 
 		context.strokeStyle = color;
 		context.fillStyle = color;
-		context.translate(x + w/2, y + h/2);
+		context.translate(x, y);
 		context.rotate(rotation);
 		if (fill)
 			context.fillRect(-w/2, -h/2, w, h);
 		else
-			context.strokeRect(x, y, w, h);
+			context.strokeRect(-w/2, -h/2, w, h);
 		context.rotate(-rotation);
-		context.translate(-x - w/2, -y - h/2);
+		context.translate(-x, -y);
 	};
 
 	this.resetCanvas = function() {
