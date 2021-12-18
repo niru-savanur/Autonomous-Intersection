@@ -109,9 +109,18 @@ class Car(Agent):
             new_rotation = self.target_angle
             turn = new_rotation - self.rotation
 
-        new_direction = self._get_new_direction(turn)
-        new_x = self.x + new_direction[0] * self.velocity
-        new_y = self.y + new_direction[1] * self.velocity
+        if turn == 0:
+            new_x = self.x + self.direction[0] * self.velocity
+            new_y = self.y + self.direction[1] * self.velocity
+            return new_x, new_y, self.rotation
+
+        new_x = self.x
+        new_y = self.y
+        new_direction = self.direction
+        for step in range(self.velocity):
+            new_direction = self._get_new_direction(new_direction, turn / self.velocity)
+            new_x += new_direction[0]
+            new_y += new_direction[1]
         return new_x, new_y, new_rotation
 
     def step(self):
@@ -164,16 +173,17 @@ class Car(Agent):
         return Rect(next_[0] - self.width // 2, next_[1] - self.height // 2, self.width, self.height, next_[2])
 
     def rotate(self, angle):
-        self.direction = self._get_new_direction(angle)
+        self.direction = self._get_new_direction(self.direction,  angle)
         self.rotation += angle
 
     def rotate_right_angle(self, angle):
         self.direction = self._get_new_right_angle_direction(angle)
         self.rotation += angle
 
-    def _get_new_direction(self, angle: float) -> Tuple[float, float]:
-        new_x = self.direction[0] * cos(angle) - self.direction[1] * sin(angle)
-        new_y = self.direction[0] * sin(angle) + self.direction[1] * cos(angle)
+    @staticmethod
+    def _get_new_direction(current: Tuple[float, float], angle: float) -> Tuple[float, float]:
+        new_x = current[0] * cos(angle) - current[1] * sin(angle)
+        new_y = current[0] * sin(angle) + current[1] * cos(angle)
         return new_x, new_y
 
     def _get_new_right_angle_direction(self, angle: float) -> Tuple[float, float]:

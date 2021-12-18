@@ -22,7 +22,7 @@ model_params = {
         "Car velocity",
         10,
         1,
-        100,
+        30,
         1,
         description="Car velocity",
     ),

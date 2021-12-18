@@ -116,14 +116,14 @@ class IntersectionManager:
                         car.can_move = False
                         continue
                 if should_move:
-                    car.turn(car.steer_direction,
-                             round(self.distance_from_line(car.initial_direction, car.steer_direction, car.x, car.y)))
+                    dist = round(self.distance_from_line(car.initial_direction, car.steer_direction, car.x, car.y))
+                    car.turn(car.steer_direction, dist)
                 car.can_move = True
                 new_rects.append(rect)
 
     def should_car_turn(self, car: Car) -> bool:
         if car.steer_direction == Steer.Forward or car.steer != Steer.Forward: return False
-        current_dist = self.distance_from_line(car.initial_direction, car.steer_direction, *car.front)
+        current_dist = self.distance_from_line(car.initial_direction, car.steer_direction, car.x, car.y)
         next_dist = self.distance_from_line(car.initial_direction, car.steer_direction, *car.new_position[:2])
         return current_dist >= 2 * car.width >= next_dist
 
@@ -133,18 +133,3 @@ class IntersectionManager:
             return abs(self.lanes[direction].line.position - x)
         else:
             return abs(self.lanes[direction].line.position - y)
-
-        if steer == Steer.Right:
-            if initial_direction in (Direction.Up, Direction.Down):
-                return abs(self.intersection.center[1] - y)
-            else:
-                return abs(self.intersection.center[0] - x)
-        else:
-            if initial_direction == Direction.Up:
-                return abs(self.intersection.top - y)
-            elif initial_direction == Direction.Down:
-                return abs(self.intersection.bottom - y)
-            elif initial_direction == Direction.Left:
-                return abs(self.intersection.right - x)
-            else:
-                return abs(self.intersection.left - x)

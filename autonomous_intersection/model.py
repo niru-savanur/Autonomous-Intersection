@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Tuple
 
 from mesa import Model
 from mesa.space import ContinuousSpace
@@ -11,17 +11,19 @@ from autonomous_intersection.rect import Rect
 
 
 class Intersection(Model):
-    def __init__(self, height=1000, width=1000, spawn_rate=10, velocity: int = 10, *args: Any, **kwargs: Any):
+    def __init__(self, height=1000, width=1000,  spawn_rate=10, velocity: int = 10, *args: Any, **kwargs: Any):
         super().__init__(*args, **kwargs)
         self.schedule = SimultaneousActivation(self)
         self.space = ContinuousSpace(height, width, False)
         self.width = width
         self.height = height
-        self.manager = IntersectionManager(self.width, self.height, 150, velocity, self)
+        self.road_width = 70
+        self.manager = IntersectionManager(self.width, self.height, self.road_width, velocity, self)
         self.build_background()
         self.agent_id = 0
         self.running = True
         self.spawn_rate = spawn_rate / 100
+        self.car_height = 15
 
     def get_agent_id(self):
         self.agent_id += 1
@@ -40,13 +42,16 @@ class Intersection(Model):
     def add_new_agents(self):
         for entry in Direction:
             if not self.manager.is_entry_occupied(entry) and self.random.random() < self.spawn_rate:
-                self.spawn_car(entry, 50, 30)
+                self.spawn_car(entry, *self.random_car_size(self.car_height))
+
+    def random_car_size(self, height) -> Tuple[int, int]:
+        return self.random.randint(round(height * 1.3), height*2), height
 
     def step(self):
-        self.schedule.step()
         self.add_new_agents()
         self.manager.remove_cars(self.space)
         self.manager.control_cars()
+        self.schedule.step()
 
     def draw_debug_object(self, rect: Rect, color: str):
         cell = VisualCell((rect.left, rect.top), (rect.width, rect.height), self, color, 2)
