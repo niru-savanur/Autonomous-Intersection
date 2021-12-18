@@ -1,3 +1,4 @@
+import random
 from typing import Dict, Tuple
 
 import autonomous_intersection.model
@@ -43,9 +44,10 @@ class IntersectionManager:
                     self.road_width, 0)
 
     def create_new_car(self, initial_direction: Direction, car_size: Tuple[int, int], agent_id: int):
+        direction = random.choice([d for d in Direction if d != initial_direction.reverse])
         car = Car(agent_id, self.model, self.lanes[initial_direction].line,
                   self.get_initial_car_position(initial_direction),
-                  car_size, initial_direction, initial_direction, velocity=self.default_velocity)
+                  car_size, initial_direction, direction, velocity=self.default_velocity)
         self.cars[agent_id] = car
         return car
 
@@ -115,18 +117,23 @@ class IntersectionManager:
                         continue
                 if should_move:
                     car.turn(car.steer_direction,
-                             round(self.distance_from_line(car.initial_direction, car.steer_direction, car.x,
-                                                           car.y)))
+                             round(self.distance_from_line(car.initial_direction, car.steer_direction, car.x, car.y)))
                 car.can_move = True
                 new_rects.append(rect)
 
     def should_car_turn(self, car: Car) -> bool:
         if car.steer_direction == Steer.Forward or car.steer != Steer.Forward: return False
-        current_dist = self.distance_from_line(car.initial_direction, car.steer_direction, car.x, car.y)
+        current_dist = self.distance_from_line(car.initial_direction, car.steer_direction, *car.front)
         next_dist = self.distance_from_line(car.initial_direction, car.steer_direction, *car.new_position[:2])
         return current_dist >= 2 * car.width >= next_dist
 
     def distance_from_line(self, initial_direction: Direction, steer: Steer, x: int, y: int) -> float:
+        direction = initial_direction.turned(steer)
+        if direction in (Direction.Down, Direction.Up):
+            return abs(self.lanes[direction].line.position - x)
+        else:
+            return abs(self.lanes[direction].line.position - y)
+
         if steer == Steer.Right:
             if initial_direction in (Direction.Up, Direction.Down):
                 return abs(self.intersection.center[1] - y)

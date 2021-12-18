@@ -34,6 +34,25 @@ class Direction(Enum):
     def angle(self) -> float:
         return self.value.angle
 
+    @property
+    def reverse(self):
+        if self == Direction.Up: return Direction.Down
+        if self == Direction.Down: return Direction.Up
+        if self == Direction.Left: return Direction.Right
+        return Direction.Left
+
+    def turned(self, steer: Steer):
+        if steer == Steer.Forward:
+            return self
+        if self == Direction.Down:
+            return Direction.Left if steer == Steer.Right else Direction.Right
+        if self == Direction.Up:
+            return Direction.Right if steer == Steer.Right else Direction.Left
+        if self == Direction.Left:
+            return Direction.Up if steer == Steer.Right else Direction.Down
+        if self == Direction.Right:
+            return Direction.Down if steer == Steer.Right else Direction.Up
+
 
 class Car(Agent):
     def __init__(self, _id, model, line: Line, position, size, initial_direction: Direction = Direction.Left,
@@ -106,6 +125,18 @@ class Car(Agent):
     def advance(self):
         self.x = self._new_x
         self.y = self._new_y
+
+    @property
+    def front(self) -> Tuple[int, int]:
+        if self.direction == Direction.Up.velocity:
+            return self.x + self.width // 2, self.y
+        if self.direction == Direction.Down.velocity:
+            return self.x - self.width // 2, self.y
+        if self.direction == Direction.Left.velocity:
+            return self.x, self.y - self.width // 2
+        if self.direction == Direction.Right.velocity:
+            return self.x, self.y + self.width // 2
+        return self.x, self.y
 
     @property
     def steer_direction(self) -> Steer:

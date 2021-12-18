@@ -17,7 +17,7 @@ class Intersection(Model):
         self.space = ContinuousSpace(height, width, False)
         self.width = width
         self.height = height
-        self.manager = IntersectionManager(self.width, self.height, 100, velocity, self)
+        self.manager = IntersectionManager(self.width, self.height, 150, velocity, self)
         self.build_background()
         self.agent_id = 0
         self.running = True

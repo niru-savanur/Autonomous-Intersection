@@ -1,7 +1,5 @@
 from mesa import Agent
 
-from autonomous_intersection.rect import Rect
-
 
 class VisualCell(Agent):
     def __init__(self, pos, size, model, color="black", layer=-1, shape="simplerect", filled=True):

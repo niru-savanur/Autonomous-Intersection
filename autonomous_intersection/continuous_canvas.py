@@ -11,6 +11,7 @@ class ContinuousCanvas(VisualizationElement):
         """
         Instantiate a new SimpleCanvas
         """
+        super(ContinuousCanvas, self).__init__()
         self.portrayal_method = portrayal_method
         self.canvas_height = canvas_height
         self.canvas_width = canvas_width
