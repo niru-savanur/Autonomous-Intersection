@@ -4,8 +4,10 @@ from mesa import Model
 from mesa.space import ContinuousSpace
 from mesa.time import SimultaneousActivation
 
-from autonomous_intersection.agents.car import Car
+from autonomous_intersection.agents.car import Direction
+from autonomous_intersection.agents.visualcell import VisualCell
 from autonomous_intersection.intersection_manager import IntersectionManager
+from autonomous_intersection.rect import Rect
 
 
 class Intersection(Model):
@@ -15,7 +17,7 @@ class Intersection(Model):
         self.space = ContinuousSpace(height, width, False)
         self.width = width
         self.height = height
-        self.manager = IntersectionManager(self.width, self.height, 100, velocity)
+        self.manager = IntersectionManager(self.width, self.height, 100, velocity, self)
         self.build_background()
         self.agent_id = 0
         self.running = True
@@ -31,12 +33,12 @@ class Intersection(Model):
             self.schedule.add(cell)
 
     def spawn_car(self, entry, width, height):
-        cell = self.manager.create_new_car(entry, width, height, self.get_agent_id(), self)
+        cell = self.manager.create_new_car(entry, (width, height), self.get_agent_id())
         self.space.place_agent(cell, (cell.x, cell.y))
         self.schedule.add(cell)
 
     def add_new_agents(self):
-        for entry in (Car.LEFT, ):  # (Car.UP, Car.DOWN, Car.RIGHT, Car.LEFT):
+        for entry in Direction:
             if not self.manager.is_entry_occupied(entry) and self.random.random() < self.spawn_rate:
                 self.spawn_car(entry, 50, 30)
 
@@ -45,3 +47,8 @@ class Intersection(Model):
         self.add_new_agents()
         self.manager.remove_cars(self.space)
         self.manager.control_cars()
+
+    def draw_debug_object(self, rect: Rect, color: str):
+        cell = VisualCell((rect.left, rect.top), (rect.width, rect.height), self, color, 2)
+        self.space.place_agent(cell, (cell.x, cell.y))
+        self.schedule.add(cell)

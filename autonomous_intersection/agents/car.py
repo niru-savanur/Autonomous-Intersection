@@ -1,11 +1,13 @@
 import math
 import random
+from collections import namedtuple
 from enum import Enum, auto
 from math import cos, sin
 from typing import Tuple
 
 from mesa import Agent
 
+from autonomous_intersection.line import Line
 from autonomous_intersection.rect import Rect
 
 
@@ -15,21 +17,31 @@ class Steer(Enum):
     Right = auto()
 
 
-class Car(Agent):
-    ANGLE_RIGHT = 0
-    ANGLE_LEFT = math.pi
-    ANGLE_UP = -math.pi / 2
-    ANGLE_DOWN = math.pi / 2
-    UP = (0, -1)
-    DOWN = (0, 1)
-    LEFT = (-1, 0)
-    RIGHT = (1, 0)
+DirectionData = namedtuple("DirectionData", ["angle", "velocity"])
 
-    def __init__(self, _id, pos, size, model, rotation=0, target: Tuple[int, int] = RIGHT, color=None,
-                 velocity: int = 10):
+
+class Direction(Enum):
+    Up = DirectionData(angle=-math.pi / 2, velocity=(0, -1))
+    Down = DirectionData(angle=math.pi / 2, velocity=(0, 1))
+    Left = DirectionData(angle=math.pi, velocity=(-1, 0))
+    Right = DirectionData(angle=0.0, velocity=(1, 0))
+
+    @property
+    def velocity(self) -> Tuple[int, int]:
+        return self.value.velocity
+
+    @property
+    def angle(self) -> float:
+        return self.value.angle
+
+
+class Car(Agent):
+    def __init__(self, _id, model, line: Line, position, size, initial_direction: Direction = Direction.Left,
+                 target: Direction = Direction.Right, color=None, velocity: int = 10):
         super().__init__(_id, model)
-        self.x, self.y = pos
-        self._new_x, self._new_y = pos
+        self.line: Line = line
+        self.x, self.y = position
+        self._new_x, self._new_y = self.x, self.y
         self.width, self.height = size
         self._nextState = None
         self.state = None
@@ -40,10 +52,10 @@ class Car(Agent):
         self.direction: Tuple[float, float] = (1.0, 0.0)  # x and y parts of velocity, summed to 1
         self.rotation: float = 0.0  # angle in radians
         self.can_move: bool = True
-        self.rotate_right_angle(rotation)
+        self.rotate_right_angle(initial_direction.angle)
         self.velocity: int = velocity
-        self.entry: Tuple[float, float] = self.direction
-        self.target = target
+        self.initial_direction: Direction = initial_direction
+        self.target: Direction = target
         self.steer: Steer = Steer.Forward
         self.target_angle: float = self.rotation
         self.rotation_speed: float = 0.0
@@ -96,13 +108,11 @@ class Car(Agent):
 
     @property
     def steer_direction(self) -> Steer:
-        if (self.entry, self.target) in (
-                (self.ANGLE_RIGHT, self.RIGHT), (self.ANGLE_UP, self.UP), (self.ANGLE_DOWN, self.DOWN),
-                (self.ANGLE_LEFT, self.LEFT)):
+        if self.initial_direction == self.target:
             return Steer.Forward
-        if (self.entry, self.target) in (
-                (self.ANGLE_RIGHT, self.DOWN), (self.ANGLE_UP, self.RIGHT), (self.ANGLE_DOWN, self.LEFT),
-                (self.ANGLE_LEFT, self.UP)):
+        if (self.initial_direction, self.target) in (
+                (Direction.Right, Direction.Down), (Direction.Up, Direction.Right), (Direction.Down, Direction.Left),
+                (Direction.Left, Direction.Up)):
             return Steer.Right
         return Steer.Left
 

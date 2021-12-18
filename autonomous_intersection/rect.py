@@ -3,7 +3,7 @@ from typing import Tuple
 
 
 class Rect:
-    def __init__(self, x, y, w, h, rotation):
+    def __init__(self, x, y, w, h, rotation=0.0):
         self.left = x
         self.top = y
         self.width = w
@@ -29,6 +29,12 @@ class Rect:
 
     @property
     def center(self) -> Tuple[float, float]:
+        if self.rotation == 0:
+            return self._center_without_rotation
+        return self._bounding_box().center
+
+    @property
+    def _center_without_rotation(self):
         return self.left + self.width / 2, self.top + self.height / 2
 
     def __str__(self):
@@ -39,7 +45,7 @@ class Rect:
 
     def _get_points(self):
         points = [(self.left, self.top), (self.right, self.top), (self.right, self.bottom), (self.left, self.bottom)]
-        return list(map(lambda x: self._rotate(self.center, x, self.rotation), points))
+        return list(map(lambda x: self._rotate(self._center_without_rotation, x, self.rotation), points))
 
     def _bounding_box(self):
         x_coordinates, y_coordinates = zip(*self._get_points())

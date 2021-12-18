@@ -4,13 +4,15 @@ var ContinuousVisualization = function(height, width, context) {
 	var context = context;
 
 	this.draw = function(objects) {
+		objects.sort((a, b) => {return a.Layer - b.Layer});
+		console.log(objects)
 		for (var i in objects) {
 			var p = objects[i];
-			if (p.Shape == "simplerect")
+			if (p.Shape === "simplerect")
 				this.drawSimpleRectangle(p.x, p.y, p.w, p.h, p.Color, p.Filled, p.rotation);
-			if (p.Shape == "rect")
+			if (p.Shape === "rect")
 				this.drawRectangle(p.x, p.y, p.w, p.h, p.Color, p.Filled, p.rotation);
-			if (p.Shape == "circle")
+			if (p.Shape === "circle")
 				this.drawCircle(p.x, p.y, p.r, p.Color, p.Filled);
 		};
 
