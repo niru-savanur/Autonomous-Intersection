@@ -4,7 +4,7 @@ from mesa import Model
 from mesa.space import ContinuousSpace
 from mesa.time import SimultaneousActivation
 
-from autonomous_intersection.agents.car import Direction
+from autonomous_intersection.agents.direction import Direction
 from autonomous_intersection.agents.visualcell import VisualCell
 from autonomous_intersection.intersection_manager import IntersectionManager
 from autonomous_intersection.rect import Rect

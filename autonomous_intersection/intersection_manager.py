@@ -2,7 +2,8 @@ import random
 from typing import Dict, Tuple
 
 import autonomous_intersection.model
-from autonomous_intersection.agents.car import Car, Steer, Direction
+from autonomous_intersection.agents.car import Car
+from autonomous_intersection.agents.direction import Direction, Steer
 from autonomous_intersection.intersection_builder import IntersectionBackgroundBuilder
 from autonomous_intersection.lane import Lane
 from autonomous_intersection.rect import Rect
@@ -45,7 +46,7 @@ class IntersectionManager:
 
     def create_new_car(self, initial_direction: Direction, car_size: Tuple[int, int], agent_id: int):
         direction = random.choice([d for d in Direction if d != initial_direction.reverse])
-        car = Car(agent_id, self.model, self.lanes[initial_direction].line,
+        car = Car(agent_id, self.model, self.lanes[initial_direction].line, self.lanes[direction].line,
                   self.get_initial_car_position(initial_direction),
                   car_size, initial_direction, direction, velocity=self.default_velocity)
         self.cars[agent_id] = car
@@ -106,25 +107,25 @@ class IntersectionManager:
             # collisions
             if any(rect in rects[other] for other in rects if car.unique_id != other) or any(
                     rect in other for other in new_rects):
-                car.can_move = False
+                car.state.can_move = False
             else:
                 should_move = self.should_car_turn(car)
                 if (should_move or rect in self.intersection) and car.unique_id != intersection:
                     if intersection is None:
                         intersection = car.unique_id
                     else:
-                        car.can_move = False
+                        car.state.can_move = False
                         continue
                 if should_move:
                     dist = round(self.distance_from_line(car.initial_direction, car.steer_direction, car.x, car.y))
                     car.turn(car.steer_direction, dist)
-                car.can_move = True
+                car.state.can_move = True
                 new_rects.append(rect)
 
     def should_car_turn(self, car: Car) -> bool:
-        if car.steer_direction == Steer.Forward or car.steer != Steer.Forward: return False
+        if car.steer_direction == Steer.Forward or car.state.steer != Steer.Forward: return False
         current_dist = self.distance_from_line(car.initial_direction, car.steer_direction, car.x, car.y)
-        next_dist = self.distance_from_line(car.initial_direction, car.steer_direction, *car.new_position[:2])
+        next_dist = self.distance_from_line(car.initial_direction, car.steer_direction, *car.new_position()[:2])
         return current_dist >= 2 * car.width >= next_dist
 
     def distance_from_line(self, initial_direction: Direction, steer: Steer, x: int, y: int) -> float:

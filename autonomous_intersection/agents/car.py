@@ -1,84 +1,54 @@
 import math
 import random
-from collections import namedtuple
-from enum import Enum, auto
+from dataclasses import dataclass
 from math import cos, sin
 from typing import Tuple
 
 from mesa import Agent
 
+from autonomous_intersection.agents.direction import Direction, Steer
 from autonomous_intersection.line import Line
 from autonomous_intersection.rect import Rect
 
 
-class Steer(Enum):
-    Forward = auto()
-    Left = auto()
-    Right = auto()
-
-
-DirectionData = namedtuple("DirectionData", ["angle", "velocity"])
-
-
-class Direction(Enum):
-    Up = DirectionData(angle=-math.pi / 2, velocity=(0, -1))
-    Down = DirectionData(angle=math.pi / 2, velocity=(0, 1))
-    Left = DirectionData(angle=math.pi, velocity=(-1, 0))
-    Right = DirectionData(angle=0.0, velocity=(1, 0))
-
-    @property
-    def velocity(self) -> Tuple[int, int]:
-        return self.value.velocity
-
-    @property
-    def angle(self) -> float:
-        return self.value.angle
-
-    @property
-    def reverse(self):
-        if self == Direction.Up: return Direction.Down
-        if self == Direction.Down: return Direction.Up
-        if self == Direction.Left: return Direction.Right
-        return Direction.Left
-
-    def turned(self, steer: Steer):
-        if steer == Steer.Forward:
-            return self
-        if self == Direction.Down:
-            return Direction.Left if steer == Steer.Right else Direction.Right
-        if self == Direction.Up:
-            return Direction.Right if steer == Steer.Right else Direction.Left
-        if self == Direction.Left:
-            return Direction.Up if steer == Steer.Right else Direction.Down
-        if self == Direction.Right:
-            return Direction.Down if steer == Steer.Right else Direction.Up
-
-
 class Car(Agent):
-    def __init__(self, _id, model, line: Line, position, size, initial_direction: Direction = Direction.Left,
-                 target: Direction = Direction.Right, color=None, velocity: int = 10):
+    @dataclass
+    class State:
+        x: int
+        y: int
+        rotation: float
+        velocity: int
+        direction: Tuple[float, float]
+        rotation_speed: float
+        can_move: bool
+        steer: Steer
+        target_angle: float
+
+    def __init__(self, _id, model, start_line: Line, target_line: Line, position, size,
+                 initial_direction: Direction = Direction.Left, target: Direction = Direction.Right, color=None,
+                 velocity: int = 10):
         super().__init__(_id, model)
-        self.line: Line = line
-        self.x, self.y = position
-        self._new_x, self._new_y = self.x, self.y
         self.width, self.height = size
-        self._nextState = None
-        self.state = None
         self.color = color if color is not None else self.random_color()
         self.shape = "rect"
         self.layer: int = 1
         self.filled = True
 
-        self.direction: Tuple[float, float] = (1.0, 0.0)  # x and y parts of velocity, summed to 1
-        self.rotation: float = 0.0  # angle in radians
-        self.can_move: bool = True
-        self.rotate_right_angle(initial_direction.angle)
-        self.velocity: int = velocity
+        self.start_line: Line = start_line
+        self.target_line = target_line
+        direction, rotation = self.rotate_right_angle(0.0, initial_direction.angle, Direction.Right.velocity)
+        self.state = Car.State(
+            *position,
+            rotation=rotation,
+            velocity=velocity,
+            direction=direction,
+            rotation_speed=0.0,
+            can_move=True,
+            steer=Steer.Forward,
+            target_angle=rotation,
+        )
         self.initial_direction: Direction = initial_direction
         self.target: Direction = target
-        self.steer: Steer = Steer.Forward
-        self.target_angle: float = self.rotation
-        self.rotation_speed: float = 0.0
 
     def turn(self, steer: Steer, turn_length: int) -> None:
         """
@@ -86,66 +56,99 @@ class Car(Agent):
         :param turn_length: distance between x or y coordinates at the start and the end of turn
         :return:
         """
-        self.steer = steer
+        self.state.steer = steer
         arc_length = 0.5 * math.pi * turn_length
-        if self.steer == Steer.Left:
-            self.rotation_speed = -(math.pi / 2) / arc_length
-            self.target_angle = self.rotation - math.pi / 2
-        elif self.steer == Steer.Right:
-            self.rotation_speed = (math.pi / 2) / arc_length
-            self.target_angle = self.rotation + math.pi / 2
-        elif self.steer == Steer.Forward:
-            self.target_angle = self.rotation
-            self.rotation_speed = 0
+        if self.state.steer == Steer.Left:
+            self.state.rotation_speed = -(math.pi / 2) / arc_length
+            self.state.target_angle = self.state.rotation - math.pi / 2
+        elif self.state.steer == Steer.Right:
+            self.state.rotation_speed = (math.pi / 2) / arc_length
+            self.state.target_angle = self.state.rotation + math.pi / 2
+        elif self.state.steer == Steer.Forward:
+            self.state.target_angle = self.state.rotation
+            self.state.rotation_speed = 0
 
-    @property
     def new_position(self):
-        turn = self.rotation_speed * self.velocity
-        new_rotation = self.rotation + turn
-        if self.steer == Steer.Right and new_rotation > self.target_angle:
-            new_rotation = self.target_angle
-            turn = new_rotation - self.rotation
-        elif self.steer == Steer.Left and new_rotation < self.target_angle:
-            new_rotation = self.target_angle
-            turn = new_rotation - self.rotation
+        turn = self.state.rotation_speed * self.state.velocity
+        new_rotation = self.state.rotation + turn
+        if self.state.steer == Steer.Right and new_rotation > self.state.target_angle:
+            new_rotation = self.state.target_angle
+            turn = new_rotation - self.state.rotation
+        elif self.state.steer == Steer.Left and new_rotation < self.state.target_angle:
+            new_rotation = self.state.target_angle
+            turn = new_rotation - self.state.rotation
 
         if turn == 0:
-            new_x = self.x + self.direction[0] * self.velocity
-            new_y = self.y + self.direction[1] * self.velocity
-            return new_x, new_y, self.rotation
+            new_x = self.state.x + self.state.direction[0] * self.state.velocity
+            new_y = self.state.y + self.state.direction[1] * self.state.velocity
+            return new_x, new_y, self.state.rotation
 
-        new_x = self.x
-        new_y = self.y
-        new_direction = self.direction
-        for step in range(self.velocity):
-            new_direction = self._get_new_direction(new_direction, turn / self.velocity)
+        new_x = self.state.x
+        new_y = self.state.y
+        new_direction = self.state.direction
+        for step in range(self.state.velocity):
+            new_direction = self._get_new_direction(new_direction, turn / self.state.velocity)
             new_x += new_direction[0]
             new_y += new_direction[1]
         return new_x, new_y, new_rotation
 
     def step(self):
-        if self.can_move:
-            self._new_x, self._new_y, rotation = self.new_position
-            self.rotate(rotation - self.rotation)
-            if rotation == self.target_angle:
-                self.steer = Steer.Forward
-                self.rotation_speed = 0.0
+        if self.state.can_move:
+            self.state.x, self.state.y, rotation = self.new_position()
+            self.rotate(rotation - self.state.rotation)
+            if rotation == self.state.target_angle:
+                self.state.steer = Steer.Forward
+                self.state.rotation_speed = 0.0
 
-    def advance(self):
-        self.x = self._new_x
-        self.y = self._new_y
+    @staticmethod
+    def random_color():
+        return random.choice(["magenta", "cyan", "lime", "purple", "violet", "green", "red", "black", "yellow",
+                              "blue", "white", "brown"])
+
+    def rotate(self, angle):
+        self.state.direction = self._get_new_direction(self.state.direction, angle)
+        self.state.rotation += angle
+
+    def rotate_right_angle(self, rotation: float, angle: float, direction: Tuple[float, float]
+                           ) -> Tuple[Tuple[float, float], float]:
+        """
+        :return: new direction and rotation
+        """
+        return self._get_new_right_angle_direction(direction, angle), rotation + angle
+
+    @staticmethod
+    def _get_new_direction(current: Tuple[float, float], angle: float) -> Tuple[float, float]:
+        new_x = current[0] * cos(angle) - current[1] * sin(angle)
+        new_y = current[0] * sin(angle) + current[1] * cos(angle)
+        return new_x, new_y
+
+    @staticmethod
+    def _get_new_right_angle_direction(direction: Tuple[float, float], angle: float) -> Tuple[float, float]:
+        new_x = direction[0] * cos(angle) - direction[1] * sin(angle)
+        new_y = direction[0] * sin(angle) + direction[1] * cos(angle)
+        return round(new_x), round(new_y)
 
     @property
-    def front(self) -> Tuple[int, int]:
-        if self.direction == Direction.Up.velocity:
-            return self.x + self.width // 2, self.y
-        if self.direction == Direction.Down.velocity:
-            return self.x - self.width // 2, self.y
-        if self.direction == Direction.Left.velocity:
-            return self.x, self.y - self.width // 2
-        if self.direction == Direction.Right.velocity:
-            return self.x, self.y + self.width // 2
-        return self.x, self.y
+    def x(self):
+        return self.state.x
+
+    @property
+    def y(self):
+        return self.state.y
+
+    @property
+    def rotation(self):
+        return self.state.rotation
+
+    @property
+    def rect(self) -> Rect:
+        return Rect(self.state.x - self.width // 2, self.state.y - self.height // 2, self.width, self.height,
+                    self.state.rotation)
+
+    @property
+    def new_rect(self) -> Rect:
+        next_ = self.new_position()
+        return Rect(next_[0] - self.width // 2, next_[1] - self.height // 2, self.width, self.height, next_[2])
 
     @property
     def steer_direction(self) -> Steer:
@@ -156,37 +159,3 @@ class Car(Agent):
                 (Direction.Left, Direction.Up)):
             return Steer.Right
         return Steer.Left
-
-    @staticmethod
-    def random_color():
-        return random.choice(
-            ["magenta", "cyan", "lime", "purple", "violet", "green", "red", "black", "yellow", "blue", "white",
-             "brown"])
-
-    @property
-    def rect(self) -> Rect:
-        return Rect(self.x - self.width // 2, self.y - self.height // 2, self.width, self.height, self.rotation)
-
-    @property
-    def new_rect(self) -> Rect:
-        next_ = self.new_position
-        return Rect(next_[0] - self.width // 2, next_[1] - self.height // 2, self.width, self.height, next_[2])
-
-    def rotate(self, angle):
-        self.direction = self._get_new_direction(self.direction,  angle)
-        self.rotation += angle
-
-    def rotate_right_angle(self, angle):
-        self.direction = self._get_new_right_angle_direction(angle)
-        self.rotation += angle
-
-    @staticmethod
-    def _get_new_direction(current: Tuple[float, float], angle: float) -> Tuple[float, float]:
-        new_x = current[0] * cos(angle) - current[1] * sin(angle)
-        new_y = current[0] * sin(angle) + current[1] * cos(angle)
-        return new_x, new_y
-
-    def _get_new_right_angle_direction(self, angle: float) -> Tuple[float, float]:
-        new_x = self.direction[0] * cos(angle) - self.direction[1] * sin(angle)
-        new_y = self.direction[0] * sin(angle) + self.direction[1] * cos(angle)
-        return round(new_x), round(new_y)
