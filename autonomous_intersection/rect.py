@@ -48,6 +48,11 @@ class Rect:
         return list(map(lambda x: self._rotate(self._center_without_rotation, x, self.rotation), points))
 
     def _bounding_box(self):
+        if math.isclose(self.rotation, math.pi, abs_tol=0.01) or math.isclose(self.rotation, 0, abs_tol=0.01):
+            return Rect(self.left, self.top, self.width, self.height, 0)
+        if math.isclose(self.rotation % (math.pi / 2), 0, abs_tol=0.01):
+            center = self._center_without_rotation
+            return Rect(center[0] - self.height / 2, center[1] - self.width / 2, self.height, self.width)
         x_coordinates, y_coordinates = zip(*self._get_points())
         mx = min(x_coordinates)
         my = min(y_coordinates)
