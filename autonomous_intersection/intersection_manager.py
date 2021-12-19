@@ -3,20 +3,23 @@ from typing import Dict, Tuple
 
 import autonomous_intersection.model
 from autonomous_intersection.agents.car import Car
-from autonomous_intersection.agents.direction import Direction, Steer
+from autonomous_intersection.agents.direction import Direction
 from autonomous_intersection.intersection_builder import IntersectionBackgroundBuilder
 from autonomous_intersection.lane import Lane
 from autonomous_intersection.rect import Rect
 
 
 class IntersectionManager:
-    def __init__(self, width: int, height: int, road_width: int, default_velocity: int,
+    def __init__(self, width: int, height: int, road_width: int, parameters: dict,
                  model: "autonomous_intersection.model.Intersection"):
         self.road_width: int = road_width
         self.width: int = width
         self.height: int = height
         self.model = model
-        self.default_velocity = default_velocity
+        self.default_velocity = parameters.get("velocity", 10)
+        self.acceleration = parameters.get("acceleration", 4)
+        self.deceleration = parameters.get("deceleration", 7)
+
         self.cars: Dict[int, Car] = {}
         self.intersection = self._get_intersection_rect()
         self.lanes: Dict[Direction, Lane] = self.create_lanes()
@@ -33,11 +36,6 @@ class IntersectionManager:
         result[Direction.Down] = Lane(Rect(int_rect.left, 0, int_rect.width // 2, self.height))
         result[Direction.Up] = Lane(Rect(int_rect.center[0], 0, int_rect.width // 2, self.height))
 
-        self.model.draw_debug_object(result[Direction.Right].line.bounds, "red")
-        self.model.draw_debug_object(result[Direction.Left].line.bounds, "lime")
-        self.model.draw_debug_object(result[Direction.Up].line.bounds, "yellow")
-        self.model.draw_debug_object(result[Direction.Down].line.bounds, "purple")
-
         return result
 
     def _get_intersection_rect(self) -> Rect:
@@ -48,7 +46,10 @@ class IntersectionManager:
         direction = random.choice([d for d in Direction if d != initial_direction.reverse])
         car = Car(agent_id, self.model, self.lanes[initial_direction].line, self.lanes[direction].line,
                   self.get_initial_car_position(initial_direction),
-                  car_size, initial_direction, direction, velocity=self.default_velocity)
+                  car_size, initial_direction, direction,
+                  velocity=self.default_velocity,
+                  acceleration=self.acceleration,
+                  deceleration=self.deceleration)
         self.cars[agent_id] = car
         return car
 
@@ -107,13 +108,14 @@ class IntersectionManager:
             # collisions
             if any(rect in rects[other] for other in rects if car.unique_id != other) or any(
                     rect in other for other in new_rects):
-                car.state.can_move = False
+                car.stop()
             else:
+                # at intersection
                 if rect in self.intersection and car.unique_id != intersection:
                     if intersection is None:
                         intersection = car.unique_id
                     else:
-                        car.state.can_move = False
+                        car.stop()
                         continue
-                car.state.can_move = True
+                car.start()
                 new_rects.append(rect)

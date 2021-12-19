@@ -20,16 +20,16 @@ class Car(Agent):
         velocity: int
         direction: Tuple[float, float]
         rotation_speed: float
-        can_move: bool
         steer: Steer
         target_angle: float
         needs_turn: bool
+        target_velocity: int
 
         def copy(self): return replace(self)
 
     def __init__(self, _id, model, start_line: Line, target_line: Line, position, size,
                  initial_direction: Direction = Direction.Left, target: Direction = Direction.Right, color=None,
-                 velocity: int = 10):
+                 velocity: int = 10, acceleration: int = 2, deceleration: int = 7):
         super().__init__(_id, model)
         self.width, self.height = size
         self.color = color if color is not None else self.random_color()
@@ -46,11 +46,14 @@ class Car(Agent):
             velocity=velocity,
             direction=direction,
             rotation_speed=0.0,
-            can_move=True,
             steer=Steer.Forward,
             target_angle=rotation,
-            needs_turn=initial_direction != target
+            needs_turn=initial_direction != target,
+            target_velocity=velocity,
         )
+        self.acceleration = acceleration
+        self.deceleration = deceleration
+        self.max_velocity = velocity
         self.initial_direction: Direction = initial_direction
         self.target: Direction = target
 
@@ -81,8 +84,16 @@ class Car(Agent):
         distance = self.distance_from_target_line(next_state)
         return 2 * self.width > distance
 
+    def adjust_velocity(self, state: State) -> None:
+        if state.target_velocity > state.velocity:
+            state.velocity = min(state.target_velocity, state.velocity + self.acceleration)
+        if state.target_velocity < state.velocity:
+            state.velocity = max(0, state.velocity - self.deceleration)
+
     def next_step(self, state: State = None) -> State:
         state = state.copy() if state is not None else self.state.copy()
+        self.adjust_velocity(state)
+        if state.velocity == 0: return state
         turn = state.rotation_speed * state.velocity
         if turn == 0:
             state.x += state.direction[0] * state.velocity
@@ -108,12 +119,17 @@ class Car(Agent):
         state.x, state.y = new_x, new_y
         return state
 
+    def simulate(self, steps: int, start: bool = True) -> State:
+        state = self.state.copy()
+        if start: self.start(state)
+        for _ in range(steps):
+            state = self.next_step(state)
+            if self.should_turn(state):
+                self.turn(state, self.steer_direction, self.distance_from_target_line(state))
+        return state
+
     def step(self):
-        if self.state.can_move:
-            new_state = self.next_step()
-            if self.should_turn(new_state):
-                self.turn(new_state, self.steer_direction, self.distance_from_target_line(new_state))
-            self.state = new_state
+        self.state = self.simulate(1, False)
 
     def rotate(self, state: State, angle: float):
         state.direction = self._get_new_direction(state.direction, angle)
@@ -166,7 +182,7 @@ class Car(Agent):
 
     @property
     def new_rect(self) -> Rect:
-        next_ = self.next_step()
+        next_ = self.simulate(1)
         return Rect(next_.x - self.width // 2, next_.y - self.height // 2, self.width, self.height, next_.rotation)
 
     @property
@@ -178,3 +194,11 @@ class Car(Agent):
                 (Direction.Left, Direction.Up)):
             return Steer.Right
         return Steer.Left
+
+    def stop(self, state: State = None):
+        state = state if state is not None else self.state
+        state.target_velocity = 0
+
+    def start(self, state: State = None):
+        state = state if state is not None else self.state
+        state.target_velocity = self.max_velocity

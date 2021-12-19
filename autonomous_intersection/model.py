@@ -11,14 +11,14 @@ from autonomous_intersection.rect import Rect
 
 
 class Intersection(Model):
-    def __init__(self, height=1000, width=1000,  spawn_rate=10, velocity: int = 10, *args: Any, **kwargs: Any):
-        super().__init__(*args, **kwargs)
+    def __init__(self, height=1000, width=1000, spawn_rate=10, *args: Any, **parameters: Any):
+        super().__init__(*args, **parameters)
         self.schedule = SimultaneousActivation(self)
         self.space = ContinuousSpace(height, width, False)
         self.width = width
         self.height = height
-        self.road_width = 70
-        self.manager = IntersectionManager(self.width, self.height, self.road_width, velocity, self)
+        self.road_width = 80
+        self.manager = IntersectionManager(self.width, self.height, self.road_width, parameters, self)
         self.build_background()
         self.agent_id = 0
         self.running = True
@@ -45,7 +45,7 @@ class Intersection(Model):
                 self.spawn_car(entry, *self.random_car_size(self.car_height))
 
     def random_car_size(self, height) -> Tuple[int, int]:
-        return self.random.randint(round(height * 1.3), height*2), height
+        return self.random.randint(round(height * 1.3), height * 2), height
 
     def step(self):
         self.add_new_agents()

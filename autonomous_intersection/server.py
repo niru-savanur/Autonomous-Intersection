@@ -24,7 +24,25 @@ model_params = {
         1,
         30,
         1,
-        description="Car velocity",
+        description="Car maximum velocity",
+    ),
+    "acceleration": UserSettableParameter(
+        "slider",
+        "Car acceleration",
+        4,
+        1,
+        15,
+        1,
+        description="Car acceleration",
+    ),
+    "deceleration": UserSettableParameter(
+        "slider",
+        "Car deceleration",
+        7,
+        1,
+        30,
+        1,
+        description="Car deceleration",
     ),
 }
 
