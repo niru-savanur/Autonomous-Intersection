@@ -19,9 +19,20 @@ class Rect:
         return self.left + self.width
 
     def __contains__(self, r2: "Rect") -> bool:
+        if not self.intersection_heuristic(r2):
+            return False
         r1 = self._bounding_box()
         r2 = r2._bounding_box()
         return not (r2.left > r1.right or r2.right < r1.left or r2.top > r1.bottom or r2.bottom < r1.top)
+
+    def intersection_heuristic(self, other: "Rect") -> bool:
+        """
+        Fast check if intersection is possible
+        """
+        center1 = self._center_without_rotation
+        center2 = other._center_without_rotation
+        dist = max(abs(center1[0] - center2[0]), abs(center1[1] - center2[1]))
+        return dist < self.width + self.height + other.width + other.height
 
     def __eq__(self, other):
         return (self.width == other.width and self.height == other.height
