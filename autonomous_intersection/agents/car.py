@@ -186,6 +186,12 @@ class Car(Agent):
         return Rect(next_.x - self.width // 2, next_.y - self.height // 2, self.width, self.height, next_.rotation)
 
     @property
+    def visual_width(self): return self.width - 4
+
+    @property
+    def visual_height(self): return self.height - 2
+
+    @property
     def steer_direction(self) -> Steer:
         if self.initial_direction == self.target:
             return Steer.Forward

@@ -5,7 +5,7 @@ class VisualCell(Agent):
     def __init__(self, pos, size, model, color="black", layer=-1, shape="simplerect", filled=True):
         super().__init__(self, model)
         self.x, self.y = pos
-        self.width, self.height = size
+        self.visual_width, self.visual_height = size
         self.color = color
         self.layer = layer
         self.shape = shape

@@ -8,8 +8,8 @@ def portrayCell(cell: Union[Car, VisualCell]):
     assert cell is not None
     return {
         "Shape": cell.shape,
-        "w": cell.width,
-        "h": cell.height,
+        "w": cell.visual_width,
+        "h": cell.visual_height,
         "Filled": cell.filled,
         "Layer": cell.layer,
         "x": cell.x,
