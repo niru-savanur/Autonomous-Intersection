@@ -109,28 +109,11 @@ class IntersectionManager:
                     rect in other for other in new_rects):
                 car.state.can_move = False
             else:
-                should_move = self.should_car_turn(car)
-                if (should_move or rect in self.intersection) and car.unique_id != intersection:
+                if rect in self.intersection and car.unique_id != intersection:
                     if intersection is None:
                         intersection = car.unique_id
                     else:
                         car.state.can_move = False
                         continue
-                if should_move:
-                    dist = round(self.distance_from_line(car.initial_direction, car.steer_direction, car.x, car.y))
-                    car.turn(car.steer_direction, dist)
                 car.state.can_move = True
                 new_rects.append(rect)
-
-    def should_car_turn(self, car: Car) -> bool:
-        if car.steer_direction == Steer.Forward or car.state.steer != Steer.Forward: return False
-        current_dist = self.distance_from_line(car.initial_direction, car.steer_direction, car.x, car.y)
-        next_dist = self.distance_from_line(car.initial_direction, car.steer_direction, *car.new_position()[:2])
-        return current_dist >= 2 * car.width >= next_dist
-
-    def distance_from_line(self, initial_direction: Direction, steer: Steer, x: int, y: int) -> float:
-        direction = initial_direction.turned(steer)
-        if direction in (Direction.Down, Direction.Up):
-            return abs(self.lanes[direction].line.position - x)
-        else:
-            return abs(self.lanes[direction].line.position - y)
