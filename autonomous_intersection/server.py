@@ -1,5 +1,6 @@
 from mesa.visualization.UserParam import UserSettableParameter
 from mesa.visualization.ModularVisualization import ModularServer
+from mesa.visualization.modules import ChartModule
 
 from .continuous_canvas import ContinuousCanvas
 from .portrayal import portrayCell
@@ -19,33 +20,28 @@ model_params = {
     ),
     "velocity": UserSettableParameter(
         "slider",
-        "Car velocity",
+        "Car velocity [km/h]",
+        40,
         10,
-        1,
-        30,
+        60,
         1,
         description="Car maximum velocity",
     ),
     "acceleration": UserSettableParameter(
         "slider",
-        "Car acceleration",
-        4,
-        1,
-        15,
+        "Car acceleration [km/h per second]",
+        30,
+        10,
+        60,
         1,
         description="Car acceleration",
-    ),
-    "deceleration": UserSettableParameter(
-        "slider",
-        "Car deceleration",
-        7,
-        1,
-        30,
-        1,
-        description="Car deceleration",
-    ),
+    )
 }
 
+chart = ChartModule([{"Label": "Throughput [cars / min]",
+                      "Color": "Black"}],
+                    data_collector_name='data_collector')
+
 server = ModularServer(
-    Intersection, [canvas_element], "Autonomous Intersection", model_params
+    Intersection, [canvas_element, chart], "Autonomous Intersection", model_params
 )

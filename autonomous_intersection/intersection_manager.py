@@ -1,12 +1,15 @@
 import random
+from math import ceil
 from typing import Dict, Tuple
 
 import autonomous_intersection.model
 from autonomous_intersection.agents.car import Car
 from autonomous_intersection.agents.direction import Direction
+from autonomous_intersection.constants import PIXEL_PER_METER, STEPS_PER_SECONDS
 from autonomous_intersection.intersection_builder import IntersectionBackgroundBuilder
 from autonomous_intersection.lane import Lane
 from autonomous_intersection.rect import Rect
+from autonomous_intersection.unit_translator import kmh_to_pixel_per_step
 
 
 class IntersectionManager:
@@ -16,13 +19,18 @@ class IntersectionManager:
         self.width: int = width
         self.height: int = height
         self.model = model
-        self.default_velocity = parameters.get("velocity", 10)
-        self.acceleration = parameters.get("acceleration", 4)
-        self.deceleration = parameters.get("deceleration", 7)
+        self.default_velocity = kmh_to_pixel_per_step(parameters.get("velocity", 50), PIXEL_PER_METER,
+                                                      STEPS_PER_SECONDS)
+        self.acceleration = ceil(kmh_to_pixel_per_step(parameters.get("acceleration", 20), PIXEL_PER_METER,
+                                                       STEPS_PER_SECONDS) / STEPS_PER_SECONDS)
+        self.deceleration = self.default_velocity
 
         self.cars: Dict[int, Car] = {}
         self.intersection = self._get_intersection_rect()
         self.lanes: Dict[Direction, Lane] = self.create_lanes()
+        self.agent_count = 0
+        self.steps = 0
+        self.first_step = None
 
     def build_background(self):
         return IntersectionBackgroundBuilder.generate(self.width, self.height, self.road_width, self.road_width // 10,
@@ -99,6 +107,7 @@ class IntersectionManager:
             del self.cars[car.unique_id]
 
     def control_cars(self):
+        self.steps += 1
         rects = {car.unique_id: car.rect for car in self.cars.values()}
         intersection = next((rect for rect in rects if rects[rect] in self.intersection), None)
 
@@ -114,6 +123,8 @@ class IntersectionManager:
                 if rect in self.intersection and car.unique_id != intersection:
                     if intersection is None:
                         intersection = car.unique_id
+                        self.agent_count += 1
+                        if self.first_step is None: self.first_step = self.steps
                     else:
                         car.stop()
                         continue
