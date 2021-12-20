@@ -1,10 +1,10 @@
 import random
 from math import ceil
-from typing import Dict, Tuple, Optional, List, Set
+from typing import Dict, Tuple
 
 import autonomous_intersection.model
 from autonomous_intersection.agents.car import Car
-from autonomous_intersection.agents.direction import Direction, Steer
+from autonomous_intersection.agents.direction import Direction
 from autonomous_intersection.constants import PIXEL_PER_METER, STEPS_PER_SECONDS
 from autonomous_intersection.intersection_builder import IntersectionBackgroundBuilder
 from autonomous_intersection.lane import Lane
@@ -31,7 +31,6 @@ class IntersectionManager:
         self.agent_count = 0
         self.steps = 0
         self.first_step = None
-        self.reservations: Dict[frozenset, Optional[Car]] = self.create_turns()
 
     def build_background(self):
         return IntersectionBackgroundBuilder.generate(self.width, self.height, self.road_width, self.road_width // 10,
@@ -45,15 +44,6 @@ class IntersectionManager:
         result[Direction.Down] = Lane(Rect(int_rect.left, 0, int_rect.width // 2, self.height))
         result[Direction.Up] = Lane(Rect(int_rect.center[0], 0, int_rect.width // 2, self.height))
 
-        return result
-
-    @staticmethod
-    def create_turns() -> Dict[frozenset, Optional[Car]]:
-        result = {
-            frozenset({Direction.Left, Direction.Down}): None,
-            frozenset({Direction.Left, Direction.Up}): None,
-            frozenset({Direction.Right, Direction.Down}): None,
-            frozenset({Direction.Right, Direction.Up}): None}
         return result
 
     def _get_intersection_rect(self) -> Rect:
@@ -116,47 +106,5 @@ class IntersectionManager:
         for car in to_delete:
             del self.cars[car.unique_id]
 
-    def clear_reservations(self):
-        for key in self.reservations:
-            if self.reservations[key] is not None:
-                rect = self.reservations[key].rect
-                if rect not in self.intersection:
-                    self.reservations[key] = None
-
     def control_cars(self):
-        self.steps += 1
-        rects = {car.unique_id: car.rect for car in self.cars.values()}
-        self.clear_reservations()
-
-        new_rects = []
-        for car in self.cars.values():
-            rect = car.new_rect
-            # collisions
-            if any(rect in rects[other] for other in rects if car.unique_id != other) or any(
-                    rect in other for other in new_rects):
-                car.stop()
-            else:
-                # at intersection
-                if rect in self.intersection and car not in self.reservations.values():
-                    occupied = self.get_occupied_turns(car)
-                    if all(self.reservations[turn] is None for turn in occupied):
-                        # reserve lanes
-                        for turn in occupied:
-                            self.reservations[turn] = car
-                        self.agent_count += 1
-                        if self.first_step is None: self.first_step = self.steps
-                    else:
-                        car.stop()
-                        continue
-                car.start()
-                new_rects.append(rect)
-
-    @staticmethod
-    def get_occupied_turns(car: Car) -> List[frozenset]:
-        if car.steer_direction == Steer.Forward:
-            return [frozenset({car.initial_direction, car.initial_direction.turned(Steer.Right)}),
-                    frozenset({car.initial_direction, car.initial_direction.turned(Steer.Left)})]
-        if car.steer_direction == Steer.Right:
-            return [frozenset({car.initial_direction, car.target})]
-        return [frozenset({car.initial_direction, car.target}), frozenset({car.initial_direction, car.target.reverse}),
-                frozenset({car.initial_direction.reverse, car.target})]
+        raise NotImplementedError()

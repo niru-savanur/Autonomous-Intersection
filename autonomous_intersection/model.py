@@ -8,7 +8,7 @@ from mesa.time import SimultaneousActivation
 from autonomous_intersection.agents.direction import Direction
 from autonomous_intersection.agents.visualcell import VisualCell
 from autonomous_intersection.constants import PIXEL_PER_METER, STEPS_PER_SECONDS
-from autonomous_intersection.intersection_manager import IntersectionManager
+from autonomous_intersection.managers.reservation_based_manager import ReservationBasedManager
 from autonomous_intersection.rect import Rect
 
 
@@ -20,7 +20,7 @@ class Intersection(Model):
         self.width = width
         self.height = height
         self.road_width = 7 * PIXEL_PER_METER
-        self.manager = IntersectionManager(self.width, self.height, self.road_width, parameters, self)
+        self.manager = ReservationBasedManager(self.width, self.height, self.road_width, parameters, self)
         self.build_background()
         self.agent_id = 0
         self.running = True
@@ -65,4 +65,5 @@ class Intersection(Model):
     def get_agent_rate(self):
         if self.manager.first_step is None: return 0
         steps = self.manager.steps - self.manager.first_step + 1
+        if steps < 50: return 0
         return ((STEPS_PER_SECONDS * 60) * self.manager.agent_count) / steps
