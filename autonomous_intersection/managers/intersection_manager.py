@@ -5,7 +5,7 @@ from typing import Dict, Tuple
 import autonomous_intersection.model
 from autonomous_intersection.agents.car import Car
 from autonomous_intersection.agents.direction import Direction
-from autonomous_intersection.constants import PIXEL_PER_METER, STEPS_PER_SECONDS
+from autonomous_intersection.constants import PIXEL_PER_METER, STEPS_PER_SECOND
 from autonomous_intersection.intersection_builder import IntersectionBackgroundBuilder
 from autonomous_intersection.lane import Lane
 from autonomous_intersection.rect import Rect
@@ -20,9 +20,9 @@ class IntersectionManager:
         self.height: int = height
         self.model = model
         self.default_velocity = kmh_to_pixel_per_step(parameters.get("velocity", 50), PIXEL_PER_METER,
-                                                      STEPS_PER_SECONDS)
+                                                      STEPS_PER_SECOND)
         self.acceleration = ceil(kmh_to_pixel_per_step(parameters.get("acceleration", 20), PIXEL_PER_METER,
-                                                       STEPS_PER_SECONDS) / STEPS_PER_SECONDS)
+                                                       STEPS_PER_SECOND) / STEPS_PER_SECOND)
         self.deceleration = self.default_velocity
 
         self.cars: Dict[int, Car] = {}
