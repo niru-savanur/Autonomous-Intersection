@@ -51,14 +51,14 @@ class TrafficLightManager(IntersectionManager):
                     if self.first_step is None:
                         self.first_step = self.steps
                     if self.can_turn(car):
-                        car.start()
+                        car.start(STEPS_PER_SECOND)
                     else:
                         if car.rect in self.intersection:
                             car.start()
                         else:
                             car.stop()
                 else:
-                    car.start()
+                    car.start(STEPS_PER_SECOND // 2)
                 new_rects.append(rect)
 
         self.steps += 1

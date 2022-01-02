@@ -24,6 +24,7 @@ class Car(Agent):
         target_angle: float
         needs_turn: bool
         target_velocity: int
+        delay: int
 
         def copy(self): return replace(self)
 
@@ -50,6 +51,7 @@ class Car(Agent):
             target_angle=rotation,
             needs_turn=initial_direction != target,
             target_velocity=velocity,
+            delay=0
         )
         self.acceleration = acceleration
         self.deceleration = deceleration
@@ -85,6 +87,8 @@ class Car(Agent):
         return 2 * self.width > distance
 
     def adjust_velocity(self, state: State) -> None:
+        if state.delay > 1:
+            return
         if state.target_velocity > state.velocity:
             state.velocity = min(state.target_velocity, state.velocity + self.acceleration)
         if state.target_velocity < state.velocity:
@@ -121,11 +125,13 @@ class Car(Agent):
 
     def simulate(self, steps: int, start: bool = True) -> State:
         state = self.state.copy()
-        if start: self.start(state)
+        if start: self.start(0, state)
         for _ in range(steps):
             state = self.next_step(state)
             if self.should_turn(state):
                 self.turn(state, self.steer_direction, self.distance_from_target_line(state))
+            if state.delay > 0:
+                state.delay -= 1
         return state
 
     def step(self):
@@ -205,6 +211,8 @@ class Car(Agent):
         state = state if state is not None else self.state
         state.target_velocity = 0
 
-    def start(self, state: State = None):
+    def start(self, delay: int = 0, state: State = None):
         state = state if state is not None else self.state
         state.target_velocity = self.max_velocity
+        if state.velocity == 0 and delay > 0 and state.delay == 0:
+            state.delay = delay
