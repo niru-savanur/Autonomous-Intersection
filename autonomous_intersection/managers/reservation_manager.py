@@ -2,8 +2,8 @@ from typing import Optional, Dict, List
 
 import autonomous_intersection.model
 from autonomous_intersection.agents.car import Car
-from autonomous_intersection.agents.direction import Direction, Steer
-from autonomous_intersection.managers.intersection_manager import IntersectionManager
+from autonomous_intersection.agents.direction import Steer
+from autonomous_intersection.managers.intersection_manager import IntersectionManager, quarter
 
 
 class ReservationBasedManager(IntersectionManager):
@@ -11,15 +11,6 @@ class ReservationBasedManager(IntersectionManager):
                  model: "autonomous_intersection.model.Intersection"):
         super().__init__(width, height, road_width, parameters, model)
         self.reservations: Dict[frozenset, Optional[Car]] = self.create_turns()
-
-    @staticmethod
-    def create_turns() -> Dict[frozenset, Optional[Car]]:
-        result = {
-            frozenset({Direction.Left, Direction.Down}): None,
-            frozenset({Direction.Left, Direction.Up}): None,
-            frozenset({Direction.Right, Direction.Down}): None,
-            frozenset({Direction.Right, Direction.Up}): None}
-        return result
 
     def control_cars(self):
         self.steps += 1
@@ -59,9 +50,9 @@ class ReservationBasedManager(IntersectionManager):
     @staticmethod
     def get_occupied_turns(car: Car) -> List[frozenset]:
         if car.steer_direction == Steer.Forward:
-            return [frozenset({car.initial_direction, car.initial_direction.turned(Steer.Right)}),
-                    frozenset({car.initial_direction, car.initial_direction.turned(Steer.Left)})]
+            return [quarter(car.initial_direction, car.initial_direction.turned(Steer.Right)),
+                    quarter(car.initial_direction, car.initial_direction.turned(Steer.Left))]
         if car.steer_direction == Steer.Right:
-            return [frozenset({car.initial_direction, car.target})]
-        return [frozenset({car.initial_direction, car.target}), frozenset({car.initial_direction, car.target.reverse}),
-                frozenset({car.initial_direction.reverse, car.target})]
+            return [quarter(car.initial_direction, car.target)]
+        return [quarter(car.initial_direction, car.target), quarter(car.initial_direction, car.target.reverse),
+                quarter(car.initial_direction.reverse, car.target)]

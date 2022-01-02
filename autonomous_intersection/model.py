@@ -8,7 +8,7 @@ from mesa.time import SimultaneousActivation
 from autonomous_intersection.agents.direction import Direction
 from autonomous_intersection.agents.visualcell import VisualCell
 from autonomous_intersection.constants import PIXEL_PER_METER, STEPS_PER_SECOND
-from autonomous_intersection.managers.reservation_manager import ReservationBasedManager
+from autonomous_intersection.managers.advanced_reservation_manager import AdvancedReservationBasedManager
 from autonomous_intersection.rect import Rect
 
 
@@ -20,7 +20,7 @@ class Intersection(Model):
         self.width = width
         self.height = height
         self.road_width = 7 * PIXEL_PER_METER
-        self.manager = ReservationBasedManager(self.width, self.height, self.road_width, parameters, self)
+        self.manager = AdvancedReservationBasedManager(self.width, self.height, self.road_width, parameters, self)
         self.build_background()
         self.agent_id = 0
         self.running = True

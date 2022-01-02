@@ -1,6 +1,6 @@
 import random
 from math import ceil
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional
 
 import autonomous_intersection.model
 from autonomous_intersection.agents.car import Car
@@ -10,6 +10,10 @@ from autonomous_intersection.intersection_builder import IntersectionBackgroundB
 from autonomous_intersection.lane import Lane
 from autonomous_intersection.rect import Rect
 from autonomous_intersection.unit_translator import kmh_to_pixel_per_step
+
+
+def quarter(first: Direction, second: Direction):
+    return frozenset({first, second})
 
 
 class IntersectionManager:
@@ -35,6 +39,15 @@ class IntersectionManager:
     def build_background(self):
         return IntersectionBackgroundBuilder.generate(self.width, self.height, self.road_width, self.road_width // 10,
                                                       self.road_width // 25, self)
+
+    @staticmethod
+    def create_turns() -> Dict[frozenset, Optional[Car]]:
+        result = {
+            quarter(Direction.Left, Direction.Down): None,
+            quarter(Direction.Left, Direction.Up): None,
+            quarter(Direction.Right, Direction.Down): None,
+            quarter(Direction.Right, Direction.Up): None}
+        return result
 
     def create_lanes(self) -> Dict[Direction, Lane]:
         result = {}
