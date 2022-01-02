@@ -110,10 +110,11 @@ class IntersectionManager:
             return True
         return False
 
-    def remove_cars(self, space):
+    def remove_cars(self, space, schedule):
         to_delete = set()
         for car in filter(self.is_car_out_of_bounds, self.cars.values()):
             space.remove_agent(car)
+            schedule.remove(car)
             to_delete.add(car)
 
         for car in to_delete:

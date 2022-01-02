@@ -1,3 +1,4 @@
+from enum import Enum, auto
 from typing import Any, Tuple
 
 from mesa import Model
@@ -9,24 +10,39 @@ from autonomous_intersection.agents.direction import Direction
 from autonomous_intersection.agents.visualcell import VisualCell
 from autonomous_intersection.constants import PIXEL_PER_METER, STEPS_PER_SECOND
 from autonomous_intersection.managers.advanced_reservation_manager import AdvancedReservationBasedManager
+from autonomous_intersection.managers.reservation_manager import ReservationBasedManager
+from autonomous_intersection.managers.traffic_light_manager import TrafficLightManager
 from autonomous_intersection.rect import Rect
 
 
+class Manager(Enum):
+    TrafficLight = auto()
+    BasicReservation = auto()
+    AdvancedReservation = auto()
+
+
 class Intersection(Model):
-    def __init__(self, height=1000, width=1000, spawn_rate=10, *args: Any, **parameters: Any):
+    def __init__(self, height=1000, width=1000, spawn_rate=10, manager: str = Manager.TrafficLight.name, *args: Any,
+                 **parameters: Any):
         super().__init__(*args, **parameters)
         self.schedule = SimultaneousActivation(self)
         self.space = ContinuousSpace(height, width, False)
         self.width = width
         self.height = height
         self.road_width = 7 * PIXEL_PER_METER
-        self.manager = AdvancedReservationBasedManager(self.width, self.height, self.road_width, parameters, self)
+        self.manager = self.get_manager(manager)(self.width, self.height, self.road_width, parameters, self)
         self.build_background()
         self.agent_id = 0
         self.running = True
         self.spawn_rate = spawn_rate / 100
         self.car_height = int(1.5 * PIXEL_PER_METER)
         self.data_collector = DataCollector(model_reporters={"Throughput [cars / min]": self.get_agent_rate})
+
+    @staticmethod
+    def get_manager(manager):
+        if manager == Manager.TrafficLight.name: return TrafficLightManager
+        if manager == Manager.BasicReservation.name: return ReservationBasedManager
+        return AdvancedReservationBasedManager
 
     def get_agent_id(self):
         self.agent_id += 1
@@ -52,7 +68,7 @@ class Intersection(Model):
 
     def step(self):
         self.add_new_agents()
-        self.manager.remove_cars(self.space)
+        self.manager.remove_cars(self.space, self.schedule)
         self.manager.control_cars()
         self.schedule.step()
         self.data_collector.collect(self)

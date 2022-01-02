@@ -1,10 +1,10 @@
-from mesa.visualization.UserParam import UserSettableParameter
 from mesa.visualization.ModularVisualization import ModularServer
+from mesa.visualization.UserParam import UserSettableParameter
 from mesa.visualization.modules import ChartModule
 
 from .continuous_canvas import ContinuousCanvas
+from .model import Intersection, Manager
 from .portrayal import portrayCell
-from .model import Intersection
 
 canvas_element = ContinuousCanvas(portrayCell, 1000, 1000)
 
@@ -35,6 +35,11 @@ model_params = {
         60,
         1,
         description="Car acceleration",
+    ),
+    "manager": UserSettableParameter(
+        "choice",
+        choices=[Manager.TrafficLight.name, Manager.BasicReservation.name, Manager.AdvancedReservation.name],
+        value=Manager.TrafficLight.name
     )
 }
 
