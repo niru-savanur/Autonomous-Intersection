@@ -87,4 +87,4 @@ class Intersection(Model):
         if self.manager.first_step is None: return 0
         steps = self.manager.steps - self.manager.first_step + 1
         if steps < 50: return 0
-        return ((STEPS_PER_SECOND * 60) * self.manager.agent_count) / steps
+        return ((STEPS_PER_SECOND * 60) * self.manager.agent_count) // steps

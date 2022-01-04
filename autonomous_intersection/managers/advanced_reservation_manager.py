@@ -80,20 +80,6 @@ class AdvancedReservationBasedManager(IntersectionManager):
         for car in to_del:
             del self.reservation_paths[car]
 
-        # self.reservation_paths = {k: v for k, v in self.reservation_paths.items() if v}
-        # for key, car in self.reservations.items():
-        #     if car is not None:
-        #         first, second = key
-        #         rect = car.rect
-        #         if rect not in self.intersection:
-        #             self.reservations[key] = None
-        #             self.reservation_paths.pop(car, None)
-        #
-        #         if not (rect in self.lanes[first].bounds and rect in self.lanes[second].bounds):
-        #             if key == self.reservation_paths[car][0]:
-        #                 self.reservations[key] = None
-        #                 self.reservation_paths[car].pop(0)
-
     @staticmethod
     def get_occupied_turns(car: Car) -> List[frozenset]:
         if car.steer_direction == Steer.Forward:

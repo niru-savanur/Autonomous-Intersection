@@ -1,10 +1,10 @@
 from mesa.visualization.ModularVisualization import ModularServer
 from mesa.visualization.UserParam import UserSettableParameter
-from mesa.visualization.modules import ChartModule
 
 from .continuous_canvas import ContinuousCanvas
 from .model import Intersection, Manager
 from .portrayal import portrayCell
+from .throughput_counter import ThroughputCounter
 
 canvas_element = ContinuousCanvas(portrayCell, 1000, 1000)
 
@@ -43,10 +43,6 @@ model_params = {
     )
 }
 
-chart = ChartModule([{"Label": "Throughput [cars / min]",
-                      "Color": "Black"}],
-                    data_collector_name='data_collector')
-
 server = ModularServer(
-    Intersection, [canvas_element, chart], "Autonomous Intersection", model_params
+    Intersection, [canvas_element, ThroughputCounter()], "Autonomous Intersection", model_params
 )

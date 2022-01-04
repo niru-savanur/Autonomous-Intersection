@@ -5,7 +5,6 @@ var ContinuousVisualization = function(height, width, context) {
 
 	this.draw = function(objects) {
 		objects.sort((a, b) => {return a.Layer - b.Layer});
-		console.log(objects)
 		for (var i in objects) {
 			var p = objects[i];
 			if (p.Shape === "simplerect")
