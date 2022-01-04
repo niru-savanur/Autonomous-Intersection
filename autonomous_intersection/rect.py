@@ -9,6 +9,7 @@ class Rect:
         self.width = w
         self.height = h
         self.rotation = rotation
+        self._center_without_rotation_cache = self._center_without_rotation
 
     @property
     def bottom(self):
@@ -29,8 +30,8 @@ class Rect:
         """
         Fast check if intersection is possible
         """
-        center1 = self._center_without_rotation
-        center2 = other._center_without_rotation
+        center1 = self._center_without_rotation_cache
+        center2 = other._center_without_rotation_cache
         dist = max(abs(center1[0] - center2[0]), abs(center1[1] - center2[1]))
         return dist < self.width + self.height + other.width + other.height
 
