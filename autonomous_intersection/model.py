@@ -10,6 +10,7 @@ from autonomous_intersection.agents.direction import Direction
 from autonomous_intersection.agents.visualcell import VisualCell
 from autonomous_intersection.constants import PIXEL_PER_METER, STEPS_PER_SECOND
 from autonomous_intersection.managers.advanced_reservation_manager import AdvancedReservationBasedManager
+from autonomous_intersection.managers.prediction_manager import PredictionBasedManager
 from autonomous_intersection.managers.reservation_manager import ReservationBasedManager
 from autonomous_intersection.managers.traffic_light_manager import TrafficLightManager
 from autonomous_intersection.rect import Rect
@@ -19,6 +20,7 @@ class Manager(Enum):
     TrafficLight = auto()
     BasicReservation = auto()
     AdvancedReservation = auto()
+    Prediction = auto()
 
 
 class Intersection(Model):
@@ -42,7 +44,8 @@ class Intersection(Model):
     def get_manager(manager):
         if manager == Manager.TrafficLight.name: return TrafficLightManager
         if manager == Manager.BasicReservation.name: return ReservationBasedManager
-        return AdvancedReservationBasedManager
+        if manager == Manager.AdvancedReservation.name: return AdvancedReservationBasedManager
+        return PredictionBasedManager
 
     def get_agent_id(self):
         self.agent_id += 1

@@ -1,5 +1,4 @@
 import math
-import random
 from dataclasses import dataclass, replace
 from math import cos, sin
 from typing import Tuple
@@ -123,8 +122,8 @@ class Car(Agent):
         state.x, state.y = new_x, new_y
         return state
 
-    def simulate(self, steps: int, start: bool = True) -> State:
-        state = self.state.copy()
+    def simulate(self, state, steps: int, start: bool = True) -> State:
+        state = state.copy()
         if start: self.start(0, state)
         for _ in range(steps):
             state = self.next_step(state)
@@ -135,7 +134,7 @@ class Car(Agent):
         return state
 
     def step(self):
-        self.state = self.simulate(1, False)
+        self.state = self.simulate(self.state, 1, False)
 
     def rotate(self, state: State, angle: float):
         state.direction = self._get_new_direction(state.direction, angle)
@@ -166,8 +165,10 @@ class Car(Agent):
 
     @staticmethod
     def random_color():
-        return random.choice(["magenta", "cyan", "lime", "purple", "violet", "green", "red", "black", "yellow",
-                              "blue", "white", "brown"])
+        from autonomous_intersection.model import Intersection
+        return Intersection.random.choice(
+            ["magenta", "cyan", "lime", "purple", "violet", "green", "red", "black", "yellow",
+             "blue", "white", "brown"])
 
     @property
     def x(self):
@@ -181,21 +182,23 @@ class Car(Agent):
     def rotation(self):
         return self.state.rotation
 
-    @property
-    def rect(self) -> Rect:
-        return Rect(self.state.x - self.width // 2, self.state.y - self.height // 2, self.width, self.height,
-                    self.state.rotation)
+    def rect(self, state=None) -> Rect:
+        state = state if state is not None else self.state
+        return Rect(state.x - self.width // 2, state.y - self.height // 2, self.width, self.height,
+                    state.rotation)
 
     @property
     def new_rect(self) -> Rect:
-        next_ = self.simulate(1)
+        next_ = self.simulate(self.state, 1)
         return Rect(next_.x - self.width // 2, next_.y - self.height // 2, self.width, self.height, next_.rotation)
 
     @property
-    def visual_width(self): return self.width - 4
+    def visual_width(self):
+        return self.width - 4
 
     @property
-    def visual_height(self): return self.height - 2
+    def visual_height(self):
+        return self.height - 2
 
     @property
     def steer_direction(self) -> Steer:

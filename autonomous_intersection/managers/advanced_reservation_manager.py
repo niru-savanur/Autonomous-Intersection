@@ -17,7 +17,7 @@ class AdvancedReservationBasedManager(IntersectionManager):
 
     def control_cars(self):
         self.steps += 1
-        rects = {car.unique_id: car.rect for car in self.cars.values()}
+        rects = {car.unique_id: car.rect() for car in self.cars.values()}
         self.clear_reservations()
 
         new_rects = []
@@ -71,7 +71,7 @@ class AdvancedReservationBasedManager(IntersectionManager):
                 to_del.append(car)
                 continue
             n1, n2 = path[0]
-            rect = car.rect
+            rect = car.rect()
             if not (rect in self.lanes[n1].bounds and rect in self.lanes[n2].bounds):
                 self.reservations[path.pop(0)] = None
                 if not path:

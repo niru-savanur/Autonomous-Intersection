@@ -1,4 +1,3 @@
-import random
 from math import ceil
 from typing import Dict, Tuple, Optional
 
@@ -64,7 +63,7 @@ class IntersectionManager:
                     self.road_width, 0)
 
     def create_new_car(self, initial_direction: Direction, car_size: Tuple[int, int], agent_id: int):
-        direction = random.choice([d for d in Direction if d != initial_direction.reverse])
+        direction = self.model.random.choice([d for d in Direction if d != initial_direction.reverse])
         car = Car(agent_id, self.model, self.lanes[initial_direction].line, self.lanes[direction].line,
                   self.get_initial_car_position(initial_direction),
                   car_size, initial_direction, direction,

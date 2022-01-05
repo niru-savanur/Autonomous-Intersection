@@ -35,7 +35,7 @@ class TrafficLightManager(IntersectionManager):
 
     def control_cars(self) -> None:
         self.change_lights()
-        rects = {car.unique_id: car.rect for car in self.cars.values()}
+        rects = {car.unique_id: car.rect() for car in self.cars.values()}
 
         new_rects = []
         for car in self.cars.values():
@@ -53,7 +53,7 @@ class TrafficLightManager(IntersectionManager):
                     if self.can_turn(car):
                         car.start(STEPS_PER_SECOND)
                     else:
-                        if car.rect in self.intersection:
+                        if car.rect() in self.intersection:
                             car.start()
                         else:
                             car.stop()

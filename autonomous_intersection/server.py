@@ -38,8 +38,9 @@ model_params = {
     ),
     "manager": UserSettableParameter(
         "choice",
-        choices=[Manager.TrafficLight.name, Manager.BasicReservation.name, Manager.AdvancedReservation.name],
-        value=Manager.TrafficLight.name
+        choices=[Manager.TrafficLight.name, Manager.BasicReservation.name, Manager.AdvancedReservation.name,
+                 Manager.Prediction.name],
+        value=Manager.Prediction.name
     )
 }
 

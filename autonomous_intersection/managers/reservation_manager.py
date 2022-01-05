@@ -14,7 +14,7 @@ class ReservationBasedManager(IntersectionManager):
 
     def control_cars(self):
         self.steps += 1
-        rects = {car.unique_id: car.rect for car in self.cars.values()}
+        rects = {car.unique_id: car.rect() for car in self.cars.values()}
         self.clear_reservations()
 
         new_rects = []
@@ -43,7 +43,7 @@ class ReservationBasedManager(IntersectionManager):
     def clear_reservations(self):
         for key in self.reservations:
             if self.reservations[key] is not None:
-                rect = self.reservations[key].rect
+                rect = self.reservations[key].rect()
                 if rect not in self.intersection:
                     self.reservations[key] = None
 
