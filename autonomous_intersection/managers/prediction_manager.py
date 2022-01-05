@@ -49,12 +49,13 @@ class PredictionBasedManager(IntersectionManager):
         for car in self.cars.values():
             rect = car.new_rect
             # collisions
-            if any(rect in rects[other] for other in rects if car.unique_id != other) or any(
-                    rect in other for other in new_rects):
+            reserved = car in self.reservations
+            if not reserved and (any(rect in rects[other] for other in rects if car.unique_id != other) or any(
+                    rect in other for other in new_rects)):
                 car.stop()
             else:
                 # at intersection
-                if rect in self.intersection and car not in self.reservations:
+                if not reserved and rect in self.intersection:
                     if self.can_reserve(car):
                         # reserve lanes
                         self.reserve(car)
@@ -68,13 +69,8 @@ class PredictionBasedManager(IntersectionManager):
 
     def clear_reservations(self):
         to_del = set()
-        for car in self.reservations:
-            if car.rect() not in self.intersection:
+        for car, reservations in self.reservations.items():
+            if not reservations:
                 to_del.add(car)
         for car in to_del:
             del self.reservations[car]
-        reservations = list(self.reservations.values())
-        for reservation in reservations:
-            to_del = list(filter(lambda s: s < self.steps - 1, reservation.keys()))
-            for res in to_del:
-                del reservation[res]
