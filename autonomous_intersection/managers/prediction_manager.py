@@ -34,7 +34,8 @@ class PredictionBasedManager(IntersectionManager):
             if not visited and rect in self.intersection:
                 visited = True
             for reservation in self.reservations.values():
-                if (step in reservation and reservation[step] in rect) or (step-1 in reservation and reservation[step-1] in rect) or (step+1 in reservation and reservation[step+1] in rect):
+                if (step in reservation and reservation[step] in rect) or (
+                        step - 1 in reservation and reservation[step - 1] in rect):
                     return False
             step += 1
 
